@@ -30,9 +30,11 @@ export default function LoginPage() {
         {/* Left: Email Login */}
         <div className="bg-white rounded-3xl p-8 sm:p-10 border border-accf-line-dark shadow-xl space-y-6 flex flex-col justify-between">
           <div className="space-y-4">
-            <div className="w-12 h-12 rounded-full border-2 border-accf-gold bg-accf-green flex items-center justify-center font-serif font-bold text-accf-gold text-lg">
-              AF
-            </div>
+            <img
+              src="/images/accf-logo.jpg"
+              alt="African Cultural Culinary Festival Logo"
+              className="w-14 h-14 rounded-full object-contain bg-white/95 p-0.5 border-2 border-accf-gold shadow-md"
+            />
             <div className="space-y-1">
               <h1 className="font-serif font-bold text-2xl text-accf-charcoal">Member Sign In</h1>
               <p className="text-xs text-accf-muted">

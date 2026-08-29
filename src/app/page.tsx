@@ -413,9 +413,11 @@ export default function HomePage() {
               {/* Card Header */}
               <div className="flex items-center justify-between border-b border-accf-line/60 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full border border-accf-gold bg-accf-green flex items-center justify-center font-serif font-bold text-xs text-accf-gold">
-                    AF
-                  </div>
+                  <img
+                    src="/images/accf-logo.jpg"
+                    alt="African Cultural Culinary Festival Logo"
+                    className="w-9 h-9 rounded-full object-contain bg-white/95 p-0.5 border border-accf-gold shadow"
+                  />
                   <div>
                     <div className="font-serif font-bold text-xs text-accf-ivory">African Cultural</div>
                     <div className="text-[9px] font-mono tracking-wider text-accf-gold uppercase">

@@ -24,9 +24,11 @@ export function Footer() {
           {/* Col 1: Brand & Tagline */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border-2 border-accf-gold bg-accf-green flex items-center justify-center font-serif font-bold text-accf-gold text-base">
-                AF
-              </div>
+              <img
+                src="/images/accf-logo.jpg"
+                alt="African Cultural Culinary Festival Abuja 2026 Logo"
+                className="w-12 h-12 rounded-full object-contain bg-white/95 p-0.5 border-2 border-accf-gold shadow-md flex-shrink-0"
+              />
               <div>
                 <div className="font-serif font-bold text-lg text-accf-ivory">African Cultural</div>
                 <div className="text-[11px] font-mono tracking-widest uppercase text-accf-gold font-semibold">

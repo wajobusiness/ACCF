@@ -211,9 +211,11 @@ export default function DashboardPage() {
             <div className="w-full max-w-md bg-accf-charcoal text-accf-ivory rounded-3xl p-8 border-2 border-accf-gold shadow-2xl space-y-6 id-card-glow relative overflow-hidden">
               <div className="flex items-center justify-between border-b border-accf-line pb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full border border-accf-gold bg-accf-green flex items-center justify-center font-serif font-bold text-xs text-accf-gold">
-                    AF
-                  </div>
+                  <img
+                    src="/images/accf-logo.jpg"
+                    alt="African Cultural Culinary Festival Logo"
+                    className="w-9 h-9 rounded-full object-contain bg-white/95 p-0.5 border border-accf-gold shadow"
+                  />
                   <div>
                     <div className="font-serif font-bold text-sm text-accf-ivory">African Cultural Culinary Festival</div>
                     <div className="text-[9px] font-mono tracking-widest text-accf-gold uppercase">

@@ -47,9 +47,11 @@ export default function MemberProfilePage() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-accf-line pb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-accf-gold bg-accf-green flex items-center justify-center font-serif font-bold text-accf-gold text-lg">
-                AF
-              </div>
+              <img
+                src="/images/accf-logo.jpg"
+                alt="African Cultural Culinary Festival Logo"
+                className="w-14 h-14 rounded-full object-contain bg-white/95 p-0.5 border-2 border-accf-gold shadow-lg"
+              />
               <div>
                 <h1 className="font-serif font-bold text-xl sm:text-2xl text-accf-ivory">
                   African Cultural Culinary Festival

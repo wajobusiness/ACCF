@@ -389,9 +389,11 @@ function CheckoutContent() {
               <div className="bg-accf-charcoal-card border-2 border-accf-gold rounded-xl p-6 space-y-5 id-card-glow relative overflow-hidden">
                 <div className="flex items-center justify-between border-b border-accf-line/60 pb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full border border-accf-gold bg-accf-green flex items-center justify-center font-serif font-bold text-[10px] text-accf-gold">
-                      AF
-                    </div>
+                    <img
+                      src="/images/accf-logo.jpg"
+                      alt="African Cultural Culinary Festival Logo"
+                      className="w-8 h-8 rounded-full object-contain bg-white/95 p-0.5 border border-accf-gold shadow"
+                    />
                     <span className="font-serif font-bold text-xs text-accf-ivory">African Cultural Culinary Festival</span>
                   </div>
                   <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-accf-gold text-accf-charcoal font-bold">
