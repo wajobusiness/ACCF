@@ -17,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/auth-context";
+import { Hero3DMotionStage } from "@/components/home/hero-3d-stage";
+import { CinematicVideoSection } from "@/components/home/cinematic-video-section";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -51,82 +53,9 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* ========================================================================= */}
-      {/* 1. HERO SECTION                                                          */}
+      {/* 1. 3D MOTION HERO STAGE SECTION                                          */}
       {/* ========================================================================= */}
-      <section className="relative bg-accf-charcoal text-accf-ivory pt-20 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Ambient atmospheric glows */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-1/4 w-[600px] h-[450px] bg-accf-gold/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-10 w-[500px] h-[500px] bg-accf-green/30 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="max-w-4xl space-y-6">
-            {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accf-green-deep border border-accf-gold/30 text-xs font-mono tracking-widest uppercase text-accf-gold">
-              <span className="w-2 h-2 rounded-full bg-accf-gold animate-ping"></span>
-              Africa&apos;s Largest Food, Culture & Peace Movement
-            </div>
-
-            {/* H1 Two-Tone Headline */}
-            <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl font-semibold leading-[0.95] tracking-tight text-accf-ivory">
-              Take A Seat <br />
-              <em className="italic text-accf-gold font-normal">For Africa</em>
-            </h1>
-
-            {/* Subhead */}
-            <div className="font-serif text-xl sm:text-2xl text-accf-gold-soft font-medium tracking-wide">
-              Breaking The Kolanut For The Peace of Africa
-            </div>
-
-            {/* Lede body */}
-            <p className="text-base sm:text-lg text-accf-ivory/80 max-w-2xl leading-relaxed">
-              Uniting Africans through cultural and traditional cuisine to build peace, promote food security,
-              celebrate heritage and create the world&apos;s largest digital food community.
-            </p>
-
-            {/* 3 CTAs */}
-            <div className="pt-4 flex flex-wrap items-center gap-4">
-              <Link
-                href="/membership/checkout"
-                className="px-7 py-3.5 rounded bg-accf-gold text-accf-charcoal font-bold text-sm uppercase tracking-wider hover:bg-accf-gold-soft transition-all transform hover:-translate-y-0.5 shadow-xl inline-flex items-center gap-2"
-              >
-                Take a Digital Seat
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/kolanut-tree"
-                className="px-6 py-3.5 rounded bg-accf-green border border-accf-line text-accf-ivory font-semibold text-sm hover:bg-accf-green-light transition-all inline-flex items-center gap-2"
-              >
-                <TreePine className="w-4 h-4 text-accf-gold" />
-                Join The Movement
-              </Link>
-              <button
-                onClick={() => setVideoModalOpen(true)}
-                className="px-4 py-3.5 text-sm text-accf-ivory hover:text-accf-gold transition-colors inline-flex items-center gap-2.5 group"
-              >
-                <span className="w-9 h-9 rounded-full border border-accf-ivory/40 group-hover:border-accf-gold flex items-center justify-center transition-colors">
-                  <Play className="w-3.5 h-3.5 fill-current text-accf-gold ml-0.5" />
-                </span>
-                <span>Watch Documentary</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Seatline horizontal indicator at bottom of hero */}
-        <div className="max-w-7xl mx-auto mt-16 pt-6">
-          <div className="seatline filled opacity-40">
-            <div className="dot"></div>
-            <div className="track"></div>
-            <div className="dot"></div>
-            <div className="track"></div>
-            <div className="dot"></div>
-            <div className="track"></div>
-            <div className="dot"></div>
-          </div>
-        </div>
-      </section>
+      <Hero3DMotionStage onOpenVideo={() => setVideoModalOpen(true)} />
 
       {/* ========================================================================= */}
       {/* 2. LIVE STAT BAR (5 Counters)                                            */}
@@ -206,6 +135,11 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 3.5 CINEMATIC VIDEO & DOCUMENTARY THEATER SECTION                         */}
+      {/* ========================================================================= */}
+      <CinematicVideoSection />
 
       {/* ========================================================================= */}
       {/* 4. FIVE DOORS INTO THE MOVEMENT                                          */}
