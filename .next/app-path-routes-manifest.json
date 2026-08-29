@@ -1,0 +1,21 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/about/page": "/about",
+  "/admin/page": "/admin",
+  "/auth/login/page": "/auth/login",
+  "/business/page": "/business",
+  "/community/page": "/community",
+  "/dashboard/page": "/dashboard",
+  "/festival/page": "/festival",
+  "/kolanut-tree/page": "/kolanut-tree",
+  "/marketplace/page": "/marketplace",
+  "/media/page": "/media",
+  "/meet-and-eat/page": "/meet-and-eat",
+  "/members/[id]/page": "/members/[id]",
+  "/membership/checkout/page": "/membership/checkout",
+  "/membership/page": "/membership",
+  "/partnerships/page": "/partnerships",
+  "/peace-table/page": "/peace-table",
+  "/page": "/",
+  "/peace-wall/page": "/peace-wall"
+}

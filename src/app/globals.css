@@ -1,0 +1,119 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --green: #163B2E;
+  --green-deep: #0E2A20;
+  --gold: #D4A017;
+  --gold-soft: #E8C158;
+  --ivory: #F7F3E9;
+  --charcoal: #14110D;
+  --maroon: #6E1F1F;
+  --olive: #7C8A4A;
+  --ink: #1C1C1A;
+  --line: rgba(247, 243, 233, 0.16);
+  --line-dark: rgba(20, 17, 13, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-manrope), sans-serif;
+  background-color: var(--ivory);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .display-serif {
+  font-family: var(--font-fraunces), serif;
+  letter-spacing: -0.01em;
+}
+
+.mono {
+  font-family: var(--font-ibm-mono), monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #14110D;
+}
+::-webkit-scrollbar-thumb {
+  background: #163B2E;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D4A017;
+}
+
+/* Seat-Line Signature Progress Rail */
+.seatline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.seatline .track {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  position: relative;
+}
+.seatline .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+  flex-shrink: 0;
+}
+.seatline.filled .dot,
+.seatline.filled .track {
+  background: var(--gold);
+}
+.seatline.on-ivory .track,
+.seatline.on-ivory .dot {
+  background: rgba(20, 17, 13, 0.18);
+}
+.seatline.on-ivory.filled .track,
+.seatline.on-ivory.filled .dot {
+  background: var(--gold);
+}
+
+/* Golden Gradient Foil & Shimmer */
+.gold-gradient {
+  background: linear-gradient(135deg, #D4A017 0%, #FDF3D6 50%, #D4A017 100%);
+  background-size: 200% auto;
+}
+
+.gold-text-gradient {
+  background: linear-gradient(135deg, #D4A017 0%, #FFF3D1 50%, #D4A017 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtle-glass {
+  background: rgba(20, 17, 13, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(247, 243, 233, 0.12);
+}
+
+/* Digital ID Card Holographic Glow */
+.id-card-glow {
+  box-shadow: 0 20px 40px -15px rgba(212, 160, 23, 0.25), 0 0 20px rgba(22, 59, 46, 0.4);
+}
+
