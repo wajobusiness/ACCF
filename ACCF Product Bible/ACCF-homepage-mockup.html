@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>African Cultural Culinary Festival — Take A Seat For Africa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#163B2E;
+    --green-deep:#0E2A20;
+    --gold:#D4A017;
+    --gold-soft:#E8C158;
+    --ivory:#F7F3E9;
+    --charcoal:#14110D;
+    --maroon:#6E1F1F;
+    --olive:#7C8A4A;
+    --ink:#1C1C1A;
+    --line: rgba(247,243,233,0.16);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Manrope', sans-serif;
+    background:var(--ivory);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{ font-family:'Fraunces', serif; letter-spacing:-0.01em; }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em; }
+  a{ color:inherit; text-decoration:none; }
+  img{max-width:100%; display:block;}
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
+  .eyebrow{
+    text-transform:uppercase; font-size:12px; letter-spacing:0.16em; font-weight:600;
+  }
+
+  /* ---------- SEAT-LINE SIGNATURE ELEMENT ---------- */
+  .seatline{
+    display:flex; align-items:center; gap:6px; width:100%;
+  }
+  .seatline .track{ flex:1; height:1px; background:var(--line); position:relative; }
+  .seatline .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--line); flex-shrink:0;
+  }
+  .seatline.filled .dot, .seatline.filled .track{ background:var(--gold); }
+  .seatline.on-ivory .track, .seatline.on-ivory .dot{ background: rgba(20,17,13,0.18); }
+  .seatline.on-ivory.filled .track, .seatline.on-ivory.filled .dot{ background:var(--gold); }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(20,17,13,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; max-width:1180px; margin:0 auto;
+  }
+  .logo{ display:flex; align-items:center; gap:10px; color:var(--ivory); }
+  .logo .mark{
+    width:34px; height:34px; border-radius:50%;
+    border:1.5px solid var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:700; color:var(--gold); font-size:14px;
+  }
+  .logo .name{ font-size:13px; line-height:1.25; }
+  .logo .name b{ display:block; font-family:'Fraunces',serif; font-size:15px; color:var(--ivory); }
+  .navlinks{ display:flex; gap:28px; font-size:14px; color:rgba(247,243,233,0.75); }
+  .navlinks a:hover{ color:var(--gold); }
+  .navcta{ display:flex; align-items:center; gap:16px; }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 22px; border-radius:2px; font-size:13.5px; font-weight:600;
+    cursor:pointer; border:1px solid transparent; white-space:nowrap;
+    transition:transform .15s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn-gold{ background:var(--gold); color:var(--charcoal); }
+  .btn-gold:hover{ background:var(--gold-soft); }
+  .btn-outline-light{ border-color:rgba(247,243,233,0.4); color:var(--ivory); }
+  .btn-outline-light:hover{ border-color:var(--gold); color:var(--gold); }
+  .btn-green{ background:var(--green); color:var(--ivory); }
+  .btn-green:hover{ background:#1d4d3a; }
+  .btn-ghost{ color:var(--ivory); text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(247,243,233,0.4); }
+  .navtoggle{ display:none; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative; background:var(--charcoal); color:var(--ivory);
+    padding:96px 28px 0; overflow:hidden;
+  }
+  .hero::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 78% 8%, rgba(212,160,23,0.16), transparent 60%),
+      radial-gradient(ellipse 700px 600px at 10% 90%, rgba(22,59,46,0.55), transparent 60%);
+    pointer-events:none;
+  }
+  .africa-pattern{
+    position:absolute; right:-80px; top:60px; width:520px; opacity:0.14; pointer-events:none;
+  }
+  .hero-inner{ max-width:1180px; margin:0 auto; position:relative; }
+  .hero h1{
+    font-size:clamp(46px, 7vw, 92px); font-weight:600; line-height:0.98; margin:22px 0 20px;
+  }
+  .hero h1 em{ font-style:italic; color:var(--gold); font-weight:500; }
+  .hero .sub{ font-size:17px; font-weight:600; color:var(--gold-soft); margin-bottom:14px; letter-spacing:0.01em;}
+  .hero p.lede{ max-width:560px; font-size:16.5px; line-height:1.65; color:rgba(247,243,233,0.78); margin-bottom:34px; }
+  .hero-ctas{ display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:64px; }
+  .play{ display:inline-flex; align-items:center; gap:10px; }
+  .play .circle{
+    width:38px; height:38px; border-radius:50%; border:1px solid rgba(247,243,233,0.4);
+    display:flex; align-items:center; justify-content:center; font-size:12px;
+  }
+  .hero-foot{ padding-bottom:28px; }
+
+  /* ---------- STAT BAR ---------- */
+  .statbar{ background:var(--green); color:var(--ivory); padding:30px 0; }
+  .statgrid{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:24px;
+  }
+  .stat{ text-align:center; padding:0 8px; border-left:1px solid rgba(247,243,233,0.14); }
+  .stat:first-child{ border-left:none; }
+  .stat .num{ font-size:clamp(22px,2.6vw,32px); font-weight:600; color:var(--gold-soft); }
+  .stat .lbl{ font-size:11.5px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.75; margin-top:6px; }
+
+  /* ---------- PEACE TABLE BANNER ---------- */
+  .peaceband{
+    background:var(--maroon); color:var(--ivory);
+    padding:38px 28px; display:flex; align-items:center; justify-content:space-between; gap:32px; flex-wrap:wrap;
+  }
+  .peaceband .left .eyebrow{ color:rgba(247,243,233,0.7); margin-bottom:10px; }
+  .peaceband .km{ font-family:'Fraunces',serif; font-size:clamp(34px,4.5vw,50px); font-weight:600; }
+  .peaceband .metrics{ display:flex; gap:26px; font-size:13px; margin-top:8px; color:rgba(247,243,233,0.85); }
+  .peaceband .metrics b{ color:var(--gold-soft); font-family:'IBM Plex Mono',monospace; }
+
+  /* ---------- SECTION HEADINGS ---------- */
+  section{ padding:88px 0; }
+  .sec-head{ max-width:640px; margin-bottom:52px; }
+  .sec-head .eyebrow{ color:var(--maroon); margin-bottom:14px; }
+  .sec-head h2{ font-size:clamp(30px,3.6vw,44px); font-weight:600; line-height:1.08; }
+  .sec-head p{ margin-top:16px; color:#4a4a44; line-height:1.6; font-size:15.5px; }
+
+  /* ---------- FEATURE CARDS ---------- */
+  .cards{ display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:rgba(20,17,13,0.1); border:1px solid rgba(20,17,13,0.1); }
+  .card{ background:var(--ivory); padding:32px 24px; transition:background .2s ease; }
+  .card:hover{ background:#fffdf6; }
+  .card .idx{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--maroon); margin-bottom:26px; display:block; }
+  .card h3{ font-size:18px; font-weight:600; margin-bottom:10px; line-height:1.25; }
+  .card p{ font-size:13.5px; color:#5c5c54; line-height:1.55; margin-bottom:18px; }
+  .card .go{ font-size:12.5px; font-weight:700; color:var(--green); text-transform:uppercase; letter-spacing:0.05em; }
+
+  /* ---------- MEMBERSHIP SPLIT ---------- */
+  .membership{ background:var(--green-deep); color:var(--ivory); }
+  .msplit{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:70px; align-items:center; }
+  .membership .eyebrow{ color:var(--gold-soft); margin-bottom:16px; }
+  .membership h2{ font-size:clamp(30px,3.4vw,42px); font-weight:600; margin-bottom:18px; line-height:1.1; }
+  .membership > .wrap > p.lede{ color:rgba(247,243,233,0.72); max-width:480px; margin-bottom:30px; line-height:1.6; font-size:15px;}
+  .benefits{ display:grid; grid-template-columns:1fr 1fr; gap:11px 20px; margin-bottom:34px; }
+  .benefits li{ list-style:none; display:flex; gap:10px; font-size:13.5px; color:rgba(247,243,233,0.85); }
+  .benefits li::before{ content:"✓"; color:var(--gold); font-weight:700; flex-shrink:0; }
+  .price-row{ display:flex; align-items:baseline; gap:10px; margin-bottom:26px; }
+  .price-row .amt{ font-family:'Fraunces',serif; font-size:40px; color:var(--gold-soft); font-weight:600; }
+  .price-row .per{ font-size:12.5px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.65; }
+
+  /* ID Card */
+  .idcard{
+    background:linear-gradient(155deg, #1a4433, var(--green-deep));
+    border:1px solid rgba(212,160,23,0.35);
+    border-radius:14px; padding:26px; position:relative;
+    transform:rotate(-2.5deg);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+  }
+  .idcard::after{
+    content:"KOLANUT TREE"; position:absolute; top:22px; right:24px;
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:0.14em; color:rgba(212,160,23,0.6);
+  }
+  .idtop{ display:flex; gap:16px; align-items:center; margin-bottom:22px; }
+  .avatar{
+    width:58px; height:58px; border-radius:50%;
+    background:conic-gradient(from 200deg, #D4A017, #7C8A4A, #6E1F1F, #D4A017);
+    border:2px solid var(--gold-soft); flex-shrink:0;
+  }
+  .idname{ font-family:'Fraunces',serif; font-size:19px; font-weight:600; }
+  .idrole{ font-size:11px; color:var(--gold-soft); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px; }
+  .idmeta{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .idmeta div span{ display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.55; margin-bottom:4px; }
+  .idmeta div b{ font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:500; }
+  .idfoot{ display:flex; align-items:center; justify-content:space-between; border-top:1px dashed rgba(247,243,233,0.25); padding-top:16px; }
+  .idfoot .tag{ font-size:10.5px; color:rgba(247,243,233,0.6); max-width:170px; line-height:1.4; }
+  .qr{
+    width:46px; height:46px; border-radius:4px;
+    background:
+      repeating-linear-gradient(90deg, var(--ivory) 0 3px, transparent 3px 6px),
+      repeating-linear-gradient(0deg, var(--ivory) 0 3px, transparent 3px 6px);
+    background-blend-mode:screen; background-color:#0b1f16;
+  }
+
+  /* ---------- HOW IT WORKS (seat-line spine) ---------- */
+  .howitworks{ background:var(--ivory); }
+  .spine{ position:relative; padding-top:10px; }
+  .spine .seatline{ margin-bottom:56px; }
+  .steps{ display:grid; grid-template-columns:repeat(6,1fr); gap:18px; }
+  .step{ position:relative; padding-top:26px; }
+  .step .bead{
+    position:absolute; top:-33px; left:0; width:14px; height:14px; border-radius:50%;
+    background:var(--ivory); border:2px solid var(--gold);
+  }
+  .step .n{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--maroon); display:block; margin-bottom:10px; }
+  .step h4{ font-size:15px; font-weight:700; margin-bottom:8px; }
+  .step p{ font-size:12.5px; color:#5c5c54; line-height:1.5; }
+
+  /* ---------- GALLERY ---------- */
+  .gallery{ padding-top:0; }
+  .gridgal{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr 1.3fr; gap:14px; height:280px; }
+  .tile{
+    position:relative; border-radius:6px; overflow:hidden;
+    display:flex; align-items:flex-end; padding:16px;
+  }
+  .tile span{ color:var(--ivory); font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; position:relative; z-index:1;}
+  .tile::before{ content:""; position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.55), transparent 55%); z-index:0;}
+  .t1{ background:linear-gradient(135deg,#163B2E,#0E2A20); }
+  .t2{ background:linear-gradient(135deg,#6E1F1F,#3f1212); }
+  .t3{ background:linear-gradient(135deg,#D4A017,#8a6a12); }
+  .t4{ background:linear-gradient(135deg,#7C8A4A,#4d552c); }
+  .t5{ background:linear-gradient(135deg,#14110D,#3a2f22); }
+
+  /* ---------- PARTNERS ---------- */
+  .partners{ padding:60px 0; border-top:1px solid rgba(20,17,13,0.08); border-bottom:1px solid rgba(20,17,13,0.08); }
+  .partners .eyebrow{ color:#8a8a80; margin-bottom:26px; text-align:center; }
+  .partnerrow{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px; opacity:0.55; }
+  .partnerrow div{ font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:0.03em; }
+
+  /* ---------- FOOTER ---------- */
+  footer{ background:var(--charcoal); color:rgba(247,243,233,0.75); padding:70px 0 30px; }
+  .fgrid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:50px; margin-bottom:56px; }
+  .fbrand .logo{ margin-bottom:16px; }
+  .fbrand p{ font-size:13px; line-height:1.7; max-width:280px; color:rgba(247,243,233,0.55); }
+  .fcol h5{ font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold-soft); margin-bottom:18px; }
+  .fcol a, .fcol p{ display:block; font-size:13.5px; margin-bottom:11px; color:rgba(247,243,233,0.7); }
+  .fcol a:hover{ color:var(--gold-soft); }
+  .newsletter{ display:flex; margin-top:6px; }
+  .newsletter input{
+    flex:1; background:transparent; border:1px solid rgba(247,243,233,0.25); border-right:none;
+    padding:10px 12px; color:var(--ivory); font-size:13px; border-radius:2px 0 0 2px;
+  }
+  .newsletter button{
+    background:var(--gold); border:none; padding:0 16px; border-radius:0 2px 2px 0; cursor:pointer; font-weight:700; font-size:13px;
+  }
+  .fbottom{ display:flex; justify-content:space-between; align-items:center; padding-top:26px; border-top:1px solid rgba(247,243,233,0.12); font-size:12px; color:rgba(247,243,233,0.5); flex-wrap:wrap; gap:12px;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:980px){
+    .navlinks{ display:none; }
+    .statgrid{ grid-template-columns:repeat(3,1fr); row-gap:22px;}
+    .stat:nth-child(4){ border-left:none; }
+    .cards{ grid-template-columns:repeat(2,1fr); }
+    .msplit{ grid-template-columns:1fr; gap:44px; }
+    .idcard{ max-width:380px; margin:0 auto; transform:rotate(0); }
+    .steps{ grid-template-columns:repeat(3,1fr); row-gap:34px; }
+    .gridgal{ grid-template-columns:repeat(2,1fr); grid-auto-rows:130px; height:auto; }
+    .fgrid{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:600px){
+    .benefits{ grid-template-columns:1fr; }
+    .cards{ grid-template-columns:1fr; }
+    .steps{ grid-template-columns:repeat(2,1fr); }
+    .peaceband{ flex-direction:column; align-items:flex-start; }
+    .fgrid{ grid-template-columns:1fr; gap:36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo">
+      <div class="mark">AF</div>
+      <div class="name">African Cultural<b>Culinary Festival</b></div>
+    </div>
+    <div class="navlinks">
+      <a href="#">Festival 2026</a>
+      <a href="#">Digital Table</a>
+      <a href="#">Kolanut Tree</a>
+      <a href="#">Community</a>
+      <a href="#">Marketplace</a>
+      <a href="#">Media</a>
+    </div>
+    <div class="navcta">
+      <a class="btn btn-outline-light" href="#">Login</a>
+      <a class="btn btn-gold" href="#">Take A Seat</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <svg class="africa-pattern" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M90 5 C110 10 130 25 128 45 C126 62 140 70 148 88 C156 106 150 120 138 130 C142 148 130 165 118 168 C110 188 96 205 82 210 C70 214 66 198 70 182 C58 178 52 160 58 145 C46 138 42 118 52 105 C44 92 48 72 62 62 C58 45 68 22 90 5Z" stroke="#D4A017" stroke-width="1"/>
+  </svg>
+  <div class="hero-inner">
+    <div class="seatline on-ivory" style="max-width:220px; margin-bottom:8px;">
+      <div class="dot"></div><div class="track"></div><div class="dot"></div><div class="track"></div><div class="dot"></div>
+    </div>
+    <div class="eyebrow" style="color:rgba(247,243,233,0.6);">Africa's Largest Food, Culture &amp; Peace Movement</div>
+    <h1>Take A Seat<br><em>For Africa</em></h1>
+    <div class="sub">Breaking The Kolanut For The Peace of Africa</div>
+    <p class="lede">Uniting Africans through cultural and traditional cuisine to build peace, promote food security, celebrate heritage, and create the world's largest food community — one shared meal at a time.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-gold" href="#">Take a Digital Seat</a>
+      <a class="btn btn-green" href="#">Join The Movement</a>
+      <a class="play btn-ghost" href="#"><span class="circle">▶</span> Watch Video</a>
+    </div>
+  </div>
+</section>
+
+<section class="statbar" style="padding-top:0;">
+  <div class="wrap statgrid">
+    <div class="stat"><div class="num" data-count="200">0</div><div class="lbl">Digital Seats Reserved</div></div>
+    <div class="stat"><div class="num" data-count="400">0</div><div class="lbl">Peace Signatures</div></div>
+    <div class="stat"><div class="num" data-count="54">0</div><div class="lbl">Countries Participating</div></div>
+    <div class="stat"><div class="num" data-count="1000">0</div><div class="lbl">Traditional Cuisines</div></div>
+    <div class="stat"><div class="num" data-count="10000">0</div><div class="lbl">Expected Guests</div></div>
+  </div>
+</section>
+
+<div class="peaceband">
+  <div class="left">
+    <div class="eyebrow">The Longest Multi-Cultural Dining Table In Africa</div>
+    <div class="km">2 Kilometres</div>
+    <div class="metrics">
+      <span><b>10,000</b> Guests</span>
+      <span><b>1</b> Continent</span>
+      <span><b>1</b> Table</span>
+    </div>
+  </div>
+  <a class="btn btn-gold" href="#">Explore Peace Table</a>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Five Doors Into The Movement</div>
+      <h2>Everything Africa's food and peace economy needs, in one place.</h2>
+    </div>
+  </div>
+  <div class="wrap" style="padding:0;">
+    <div class="cards">
+      <div class="card"><span class="idx">01</span><h3>Digital Table</h3><p>Take a seat at Africa's Digital Table and be part of the largest digital food community.</p><span class="go">Learn More →</span></div>
+      <div class="card"><span class="idx">02</span><h3>Kolanut Tree</h3><p>Sign the African Kolanut Digital Tree and add your leaf for peace and unity.</p><span class="go">Learn More →</span></div>
+      <div class="card"><span class="idx">03</span><h3>Meet &amp; Eat Africa</h3><p>Connect with Africans in any country and share cultural meals together.</p><span class="go">Learn More →</span></div>
+      <div class="card"><span class="idx">04</span><h3>Festival 2026</h3><p>Join us in Abuja for the African Cultural Culinary Festival 2026.</p><span class="go">Learn More →</span></div>
+      <div class="card"><span class="idx">05</span><h3>Marketplace</h3><p>Buy, sell and trade African food products, ingredients and cultural items.</p><span class="go">Learn More →</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="membership">
+  <div class="wrap msplit">
+    <div>
+      <div class="eyebrow">Become A Member</div>
+      <h2>Reserve your Digital Chair.</h2>
+      <p class="lede">For one seat, you get full access to the continent's leading food, culture and peace platform — plus a permanent leaf on the Kolanut Tree.</p>
+      <ul class="benefits">
+        <li>Official Membership Badge</li>
+        <li>Personalized Profile &amp; Chair Number</li>
+        <li>Access to All Community Features</li>
+        <li>Meet &amp; Eat Cultural Exchange</li>
+        <li>Marketplace &amp; Business Network</li>
+        <li>Festival Discounts &amp; Priority Access</li>
+        <li>Digital Peace Ambassador Certificate</li>
+      </ul>
+      <div class="price-row"><span class="amt">₦20,000</span><span class="per">/ Year · Per Seat</span></div>
+      <div class="hero-ctas" style="margin-bottom:0;">
+        <a class="btn btn-gold" href="#">Take a Seat Now</a>
+        <a class="btn btn-outline-light" href="#">How It Works</a>
+      </div>
+    </div>
+    <div class="idcard">
+      <div class="idtop">
+        <div class="avatar"></div>
+        <div>
+          <div class="idname">Amina Okafor</div>
+          <div class="idrole">Peace Ambassador</div>
+        </div>
+      </div>
+      <div class="idmeta">
+        <div><span>Chair No.</span><b>AKDT-0002548</b></div>
+        <div><span>Country</span><b>Nigeria</b></div>
+        <div><span>Member Since</span><b>May 2025</b></div>
+        <div><span>Tier</span><b>Standard</b></div>
+      </div>
+      <div class="idfoot">
+        <div class="tag">Committed to Peace, Unity &amp; Cultural Solidarity</div>
+        <div class="qr"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="howitworks">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Join. Connect. Share. Build Peace.</div>
+      <h2>How it works.</h2>
+    </div>
+    <div class="spine">
+      <div class="seatline on-ivory filled">
+        <div class="dot"></div><div class="track"></div><div class="dot"></div><div class="track"></div><div class="dot"></div><div class="track"></div><div class="dot"></div><div class="track"></div><div class="dot"></div><div class="track"></div><div class="dot"></div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="bead"></div><span class="n">01</span><h4>Choose Your Seat</h4><p>Select your tier and complete registration.</p></div>
+        <div class="step"><div class="bead"></div><span class="n">02</span><h4>Get Your Badge</h4><p>Receive your digital badge, profile and chair number.</p></div>
+        <div class="step"><div class="bead"></div><span class="n">03</span><h4>Connect</h4><p>Meet Africans across the continent and beyond.</p></div>
+        <div class="step"><div class="bead"></div><span class="n">04</span><h4>Meet &amp; Eat</h4><p>Arrange to meet in person and share a meal.</p></div>
+        <div class="step"><div class="bead"></div><span class="n">05</span><h4>Sign The Tree</h4><p>Add your leaf to the Kolanut Tree for peace.</p></div>
+        <div class="step"><div class="bead"></div><span class="n">06</span><h4>Be Part of History</h4><p>Join a movement building a united Africa.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="gallery">
+  <div class="wrap gridgal">
+    <div class="tile t1"><span>Celebrate Culture</span></div>
+    <div class="tile t2"><span>Taste Africa</span></div>
+    <div class="tile t3"><span>Share Heritage</span></div>
+    <div class="tile t4"><span>Empower Communities</span></div>
+    <div class="tile t5"><span>Build Peace</span></div>
+  </div>
+</section>
+
+<div class="partners">
+  <div class="wrap">
+    <div class="eyebrow">Our Partners</div>
+    <div class="partnerrow">
+      <div>AFRICAN UNION</div>
+      <div>NEPAD</div>
+      <div>FAO</div>
+      <div>FED. MIN. AGRICULTURE — NIGERIA</div>
+      <div>UN ENVIRONMENT</div>
+      <div>AFRICA CDC</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div class="fbrand">
+        <div class="logo"><div class="mark">AF</div><div class="name">African Cultural<b>Culinary Festival</b></div></div>
+        <p>Breaking The Kolanut For The Peace of Africa. 300 Million Africans • One Digital Community • One Peace Movement.</p>
+      </div>
+      <div class="fcol">
+        <h5>Quick Links</h5>
+        <a href="#">Home</a><a href="#">About Us</a><a href="#">Festival 2026</a><a href="#">Digital Table</a><a href="#">Kolanut Tree</a>
+      </div>
+      <div class="fcol">
+        <h5>Contact</h5>
+        <p>Afrigreen &amp; Heritage Concepts Limited, Abuja, Nigeria</p>
+        <p>+234 805 123 4567</p>
+        <p>info@africanculinaryfestival.africa</p>
+      </div>
+      <div class="fcol">
+        <h5>Newsletter</h5>
+        <p style="margin-bottom:12px;">Get updates on the festival and community activities.</p>
+        <div class="newsletter"><input type="email" placeholder="Enter your email"><button>Subscribe</button></div>
+      </div>
+    </div>
+    <div class="fbottom">
+      <div>© 2026 African Cultural Culinary Festival. All Rights Reserved.</div>
+      <div>Food For Peace. Culture For Unity. Africa For All.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Count-up animation for stat bar, triggered on scroll into view
+  const stats = document.querySelectorAll('.stat .num');
+  const format = n => n >= 1000 ? n.toLocaleString() + (n>=1000 && n<10000 ? '+' : '+') : n + (n<100 ? 'M+' : (n<1000?'+':''));
+  function animate(el){
+    const target = parseInt(el.dataset.count, 10);
+    const isCountries = target === 54;
+    const duration = 1400;
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now-start)/duration, 1);
+      const eased = 1 - Math.pow(1-p, 3);
+      const val = Math.floor(eased * target);
+      if(isCountries){ el.textContent = val; }
+      else if(target >= 1000){ el.textContent = val.toLocaleString() + '+'; }
+      else { el.textContent = val + 'M+'; }
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ animate(e.target); obs.unobserve(e.target); }
+    });
+  }, {threshold:0.5});
+  stats.forEach(s=>obs.observe(s));
+</script>
+
+</body>
+</html>
