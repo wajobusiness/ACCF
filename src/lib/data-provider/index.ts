@@ -17,6 +17,8 @@ import {
   PeaceWallEntry,
   CountryProfile,
   PlatformAnalytics,
+  AppNotification,
+  AuditLog,
 } from "@/types/master-models";
 
 import {
@@ -41,6 +43,8 @@ import {
   DEMO_PLATFORM_ANALYTICS,
   PeaceTableZone,
   PeaceTableDish,
+  initialNotifications,
+  initialAuditLogs,
 } from "@/lib/demo-data";
 
 export interface IDataProvider {
@@ -108,6 +112,11 @@ export interface IDataProvider {
 
   // Analytics
   getAnalytics(): Promise<PlatformAnalytics>;
+
+  // Notifications & Audits
+  getNotifications(memberId?: string): Promise<AppNotification[]>;
+  markNotificationRead(id: string): Promise<boolean>;
+  getAuditLogs(): Promise<AuditLog[]>;
 }
 
 // In-Memory & LocalStorage Stateful Demo Provider
@@ -122,6 +131,8 @@ class DemoDataProvider implements IDataProvider {
   private orders: Order[] = [...DEMO_ORDERS];
   private businessOpportunities: BusinessOpportunity[] = [...DEMO_BUSINESS_OPPORTUNITIES];
   private peaceWallEntries: PeaceWallEntry[] = [...DEMO_PEACE_WALL_ENTRIES];
+  private notifications: AppNotification[] = [...initialNotifications];
+  private auditLogs: AuditLog[] = [...initialAuditLogs];
 
   async getMembershipTiers(): Promise<MembershipTier[]> {
     return DEMO_MEMBERSHIP_TIERS;
@@ -452,6 +463,26 @@ class DemoDataProvider implements IDataProvider {
       accreditedDelegates: this.accreditations.length + 4885,
       totalMarketplaceProducts: this.marketplaceListings.length,
     };
+  }
+
+  async getNotifications(memberId?: string): Promise<AppNotification[]> {
+    if (!memberId) return this.notifications;
+    return this.notifications.filter(
+      (n) => n.recipientMemberId === memberId || n.recipientMemberId === "all"
+    );
+  }
+
+  async markNotificationRead(id: string): Promise<boolean> {
+    const notif = this.notifications.find((n) => n.id === id);
+    if (notif) {
+      notif.isRead = true;
+      return true;
+    }
+    return false;
+  }
+
+  async getAuditLogs(): Promise<AuditLog[]> {
+    return this.auditLogs;
   }
 }
 

@@ -354,4 +354,27 @@ export interface PeaceTableDish {
   imageUrl: string;
 }
 
+export interface AppNotification {
+  id: string;
+  recipientMemberId: string; // or "all" or role
+  title: string;
+  message: string;
+  timestamp: string;
+  type: "booking" | "order" | "accreditation" | "tree" | "community" | "trade" | "system";
+  linkUrl: string;
+  isRead: boolean;
+}
+
+export interface AuditLog {
+  id: string;
+  actorName: string;
+  actorRole: string;
+  action: string;
+  target: string;
+  timestamp: string;
+  ipAddress: string;
+  status: "Success" | "Flagged" | "Pending";
+}
+
+
 

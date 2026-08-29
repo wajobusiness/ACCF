@@ -13,4 +13,4 @@ export * from "./sponsors";
 export * from "./peace-wall";
 export * from "./orders";
 export * from "./analytics";
-
+export * from "./notifications";
