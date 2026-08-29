@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronRight,
   ShoppingBag,
   User,
   Heart,
@@ -26,6 +27,9 @@ import {
   HeartHandshake,
   Compass,
   BookOpen,
+  ArrowRight,
+  LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 
 export function Header() {
@@ -33,10 +37,17 @@ export function Header() {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
   const { totalItemsCount, setIsOpen } = useCart();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Desktop Dropdown States
   const [festivalDropdownOpen, setFestivalDropdownOpen] = useState(false);
   const [movementDropdownOpen, setMovementDropdownOpen] = useState(false);
   const [cultureDropdownOpen, setCultureDropdownOpen] = useState(false);
+
+  // Mobile Menu & Accordion States
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileFoodOpen, setMobileFoodOpen] = useState(false);
+  const [mobileFestivalOpen, setMobileFestivalOpen] = useState(false);
+  const [mobileMovementOpen, setMobileMovementOpen] = useState(false);
 
   // Notification Drawer State
   const [notifDrawerOpen, setNotifDrawerOpen] = useState(false);
@@ -51,6 +62,11 @@ export function Header() {
     }
     loadNotifications();
   }, [user]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -69,7 +85,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-accf-charcoal/95 backdrop-blur-md border-b border-accf-line text-accf-ivory">
       {/* Top Diplomatic Banner */}
-      <div className="bg-accf-green-deep text-[11px] font-mono py-1 px-4 sm:px-6 lg:px-8 border-b border-accf-line/40 hidden sm:flex items-center justify-between text-accf-ivory/80">
+      <div className="bg-accf-green-deep text-[11px] font-mono py-1.5 px-4 sm:px-6 lg:px-8 border-b border-accf-line/40 hidden sm:flex items-center justify-between text-accf-ivory/80">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-accf-gold animate-pulse"></span>
           <span>Abuja 2026 Continental Movement &bull; &ldquo;Breaking the Kolanut for the Peace of Africa&rdquo;</span>
@@ -113,7 +129,7 @@ export function Header() {
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
             {cultureDropdownOpen && (
-              <div className="absolute top-full left-0 w-64 bg-accf-charcoal-card border border-accf-line rounded shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute top-full left-0 w-64 bg-accf-charcoal-card border border-accf-line rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <Link
                   href="/food"
                   className="flex items-center gap-2.5 px-4 py-2 hover:bg-accf-green/60 text-xs text-accf-ivory/90 hover:text-accf-gold"
@@ -162,7 +178,7 @@ export function Header() {
               <ChevronDown className="w-3.5 h-3.5" />
             </Link>
             {festivalDropdownOpen && (
-              <div className="absolute top-full left-0 w-64 bg-accf-charcoal-card border border-accf-line rounded shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute top-full left-0 w-64 bg-accf-charcoal-card border border-accf-line rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <Link
                   href="/festival"
                   className="flex items-center gap-2.5 px-4 py-2 hover:bg-accf-green/60 text-xs text-accf-ivory/90 hover:text-accf-gold"
@@ -183,6 +199,16 @@ export function Header() {
                     <div className="text-[10px] text-accf-ivory/60">10,000 Guests &bull; 1,000 Dishes</div>
                   </div>
                 </Link>
+                <Link
+                  href="/partnerships"
+                  className="flex items-center gap-2.5 px-4 py-2 hover:bg-accf-green/60 text-xs text-accf-ivory/90 hover:text-accf-gold"
+                >
+                  <ShieldCheck className="w-4 h-4 text-accf-gold" />
+                  <div>
+                    <div className="font-semibold">Partnerships &amp; Sponsors</div>
+                    <div className="text-[10px] text-accf-ivory/60">Diplomatic &amp; Corporate</div>
+                  </div>
+                </Link>
               </div>
             )}
           </div>
@@ -198,15 +224,15 @@ export function Header() {
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
             {movementDropdownOpen && (
-              <div className="absolute top-full left-0 w-72 bg-accf-charcoal-card border border-accf-line rounded shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute top-full left-0 w-72 bg-accf-charcoal-card border border-accf-line rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <Link
                   href="/kolanut-tree"
                   className="flex items-center gap-2.5 px-4 py-2 hover:bg-accf-green/60 text-xs text-accf-ivory/90 hover:text-accf-gold"
                 >
                   <TreePine className="w-4 h-4 text-accf-gold" />
                   <div>
-                    <div className="font-semibold">African Kolanut Tree</div>
-                    <div className="text-[10px] text-accf-ivory/60">The Living Tree of Peace</div>
+                    <div className="font-semibold">Living African Kolanut Tree</div>
+                    <div className="text-[10px] text-accf-ivory/60">300M+ Sovereign Digital Seats</div>
                   </div>
                 </Link>
                 <Link
@@ -226,7 +252,7 @@ export function Header() {
                   <ShieldCheck className="w-4 h-4 text-accf-gold" />
                   <div>
                     <div className="font-semibold">Community Hubs</div>
-                    <div className="text-[10px] text-accf-ivory/60">10 African Food Movement Channels</div>
+                    <div className="text-[10px] text-accf-ivory/60">10 Continental Movement Channels</div>
                   </div>
                 </Link>
                 <Link
@@ -266,7 +292,7 @@ export function Header() {
         </div>
 
         {/* Right CTA Actions */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2.5 sm:gap-4">
           {/* Notifications Bell */}
           <button
             onClick={() => setNotifDrawerOpen(true)}
@@ -299,7 +325,7 @@ export function Header() {
           {isAuthenticated && user ? (
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded bg-accf-green/60 border border-accf-line hover:border-accf-gold transition-all"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-accf-green/60 border border-accf-line hover:border-accf-gold transition-all"
             >
               <img
                 src={user.photoUrl}
@@ -316,30 +342,299 @@ export function Header() {
           ) : (
             <Link
               href="/auth/login"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-accf-ivory/90 hover:text-accf-gold border border-accf-line/60 rounded hover:border-accf-gold transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-accf-ivory/90 hover:text-accf-gold border border-accf-line/60 rounded-xl hover:border-accf-gold transition-colors"
             >
               <User className="w-3.5 h-3.5" />
-              Login
+              <span>Login</span>
             </Link>
           )}
 
           {/* Primary Take A Seat CTA (Gold) */}
           <Link
             href="/membership/checkout"
-            className="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold rounded bg-accf-gold text-accf-charcoal hover:bg-accf-gold-soft transition-all transform hover:-translate-y-0.5 shadow-md uppercase tracking-wider"
+            className="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-accf-gold text-accf-charcoal hover:bg-accf-gold-soft transition-all transform hover:-translate-y-0.5 shadow-md uppercase tracking-wider flex-shrink-0"
           >
             Take A Seat
           </Link>
 
-          {/* Mobile menu toggle */}
+          {/* Mobile Hamburger Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-accf-ivory hover:text-accf-gold"
+            className="lg:hidden p-2.5 rounded-xl text-accf-ivory hover:text-accf-gold bg-accf-charcoal-card border border-accf-line hover:border-accf-gold transition-colors"
+            aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6 text-accf-gold" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </nav>
+
+      {/* ========================================================================= */}
+      {/* MOBILE DROPDOWN / SLIDE-IN NAVIGATION MENU                                */}
+      {/* ========================================================================= */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 top-20 z-50 bg-black/80 backdrop-blur-xl lg:hidden flex flex-col justify-between animate-in slide-in-from-top-4 duration-200 overflow-y-auto">
+          <div className="p-5 sm:p-6 space-y-6 max-w-lg mx-auto w-full">
+            {/* User Profile Card (if authenticated) or Login Actions */}
+            {isAuthenticated && user ? (
+              <div className="p-4 rounded-2xl bg-accf-green-deep border border-accf-gold/60 shadow-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={user.photoUrl}
+                    alt={user.name}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-accf-gold"
+                  />
+                  <div>
+                    <h4 className="font-serif font-bold text-sm text-accf-ivory">{user.name}</h4>
+                    <span className="text-[10px] font-mono text-accf-gold font-bold">
+                      {user.chairNo || user.tier}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-accf-green hover:bg-accf-green-light text-accf-gold"
+                    title="Dashboard"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="p-2 rounded-xl bg-black/40 text-red-400 hover:text-red-300"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/auth/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-xl bg-accf-charcoal-card border border-accf-line text-center text-xs font-bold text-accf-ivory hover:border-accf-gold"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-xl bg-accf-gold text-center text-xs font-bold text-accf-charcoal uppercase tracking-wider hover:bg-accf-gold-soft"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+
+            {/* Navigation Links & Accordions */}
+            <div className="space-y-2 border-t border-accf-line/60 pt-4">
+              {/* Home */}
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-colors ${
+                  isActive("/") ? "bg-accf-green text-accf-gold font-bold" : "text-accf-ivory/90 hover:bg-accf-charcoal-card"
+                }`}
+              >
+                <span>Home</span>
+                <ChevronRight className="w-4 h-4 text-accf-gold/60" />
+              </Link>
+
+              {/* Food & Heritage Accordion */}
+              <div>
+                <button
+                  onClick={() => setMobileFoodOpen(!mobileFoodOpen)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl text-sm font-semibold text-accf-ivory/90 hover:bg-accf-charcoal-card transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <UtensilsCrossed className="w-4 h-4 text-accf-gold" />
+                    <span>Food &amp; Heritage</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-accf-gold transition-transform duration-200 ${mobileFoodOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileFoodOpen && (
+                  <div className="pl-6 pr-2 py-2 space-y-1.5 bg-black/40 rounded-xl mt-1 border border-accf-line/40">
+                    <Link
+                      href="/food"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      1,000 Traditional Dishes &amp; Recipes
+                    </Link>
+                    <Link
+                      href="/culture"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Cultural Traditions &amp; Kolanut Rites
+                    </Link>
+                    <Link
+                      href="/tourism"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Culinary Tourism &amp; 54 Nations
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Festival 2026 Accordion */}
+              <div>
+                <button
+                  onClick={() => setMobileFestivalOpen(!mobileFestivalOpen)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl text-sm font-semibold text-accf-ivory/90 hover:bg-accf-charcoal-card transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Calendar className="w-4 h-4 text-accf-gold" />
+                    <span>Festival 2026</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-accf-gold transition-transform duration-200 ${mobileFestivalOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileFestivalOpen && (
+                  <div className="pl-6 pr-2 py-2 space-y-1.5 bg-black/40 rounded-xl mt-1 border border-accf-line/40">
+                    <Link
+                      href="/festival"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Abuja 2026 Overview &amp; 8 Arenas
+                    </Link>
+                    <Link
+                      href="/peace-table"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      2km African Peace Table
+                    </Link>
+                    <Link
+                      href="/partnerships"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Partnerships &amp; Sponsorships
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Movement Accordion */}
+              <div>
+                <button
+                  onClick={() => setMobileMovementOpen(!mobileMovementOpen)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl text-sm font-semibold text-accf-ivory/90 hover:bg-accf-charcoal-card transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <TreePine className="w-4 h-4 text-accf-gold" />
+                    <span>Continental Movement</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-accf-gold transition-transform duration-200 ${mobileMovementOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileMovementOpen && (
+                  <div className="pl-6 pr-2 py-2 space-y-1.5 bg-black/40 rounded-xl mt-1 border border-accf-line/40">
+                    <Link
+                      href="/kolanut-tree"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Living African Kolanut Tree (300M+ Seats)
+                    </Link>
+                    <Link
+                      href="/meet-and-eat"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Meet &amp; Eat Africa
+                    </Link>
+                    <Link
+                      href="/community"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Community Hubs
+                    </Link>
+                    <Link
+                      href="/peace-wall"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-2 text-xs text-accf-ivory/80 hover:text-accf-gold"
+                    >
+                      Digital Peace Wall
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Standalone Direct Links */}
+              <Link
+                href="/marketplace"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-colors ${
+                  isActive("/marketplace") ? "bg-accf-green text-accf-gold font-bold" : "text-accf-ivory/90 hover:bg-accf-charcoal-card"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShoppingBag className="w-4 h-4 text-accf-gold" />
+                  <span>Marketplace</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-accf-gold/60" />
+              </Link>
+
+              <Link
+                href="/business"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-colors ${
+                  isActive("/business") ? "bg-accf-green text-accf-gold font-bold" : "text-accf-ivory/90 hover:bg-accf-charcoal-card"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-accf-gold" />
+                  <span>Agribusiness &amp; Trade</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-accf-gold/60" />
+              </Link>
+
+              <Link
+                href="/media"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-colors ${
+                  isActive("/media") ? "bg-accf-green text-accf-gold font-bold" : "text-accf-ivory/90 hover:bg-accf-charcoal-card"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <BookOpen className="w-4 h-4 text-accf-gold" />
+                  <span>Media Center</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-accf-gold/60" />
+              </Link>
+            </div>
+
+            {/* Big Action CTA Buttons */}
+            <div className="pt-4 space-y-3">
+              <Link
+                href="/membership/checkout"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-accf-gold to-accf-gold-soft text-accf-charcoal font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-xl flex items-center justify-center gap-2"
+              >
+                <span>Take A Seat For Africa</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <Link
+                href="/kolanut-tree"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-3.5 rounded-xl bg-accf-green border border-accf-gold/40 text-accf-ivory font-semibold text-xs flex items-center justify-center gap-2"
+              >
+                <TreePine className="w-4 h-4 text-accf-gold" />
+                <span>Join The Living Kolanut Tree</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* NOTIFICATIONS DRAWER */}
       {notifDrawerOpen && (
@@ -400,7 +695,7 @@ export function Header() {
               </span>
               <button
                 onClick={() => setNotifDrawerOpen(false)}
-                className="px-4 py-2 rounded bg-accf-green text-accf-ivory font-semibold text-xs hover:bg-accf-green-light"
+                className="px-4 py-2 rounded-xl bg-accf-green text-accf-ivory font-semibold text-xs hover:bg-accf-green-light"
               >
                 Close Drawer
               </button>
