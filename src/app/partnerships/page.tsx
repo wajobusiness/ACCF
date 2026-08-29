@@ -68,7 +68,7 @@ export default function PartnershipsPage() {
                   {sponsor.priceFormatted}
                 </div>
                 <ul className="space-y-2 text-xs pt-2">
-                  {sponsor.benefits.map((b, i) => (
+                  {sponsor.benefits?.map((b, i) => (
                     <li key={i} className="flex items-start gap-1.5 leading-tight opacity-90">
                       <CheckCircle2 className="w-3.5 h-3.5 text-accf-gold flex-shrink-0 mt-0.5" />
                       <span>{b}</span>

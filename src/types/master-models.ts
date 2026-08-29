@@ -7,6 +7,7 @@ export interface Member {
   id: string;
   name: string;
   email: string;
+  password?: string;
   photoUrl: string;
   country: string;
   city?: string;
@@ -15,6 +16,7 @@ export interface Member {
   joinDate: string;
   pledgeText: string;
   isVerified: boolean;
+  status?: "active" | "pending_activation" | "suspended" | string;
   role: "member" | "ambassador" | "host" | "vendor" | "business" | "moderator" | "admin";
   bio?: string;
   foodInterests?: string[];
@@ -23,6 +25,10 @@ export interface Member {
   isHost?: boolean;
   isVendor?: boolean;
   phone?: string;
+  sponsorId?: string;
+  tenantId?: string;
+  walletId?: string;
+  onboardingCompleted?: boolean;
 }
 
 export interface MembershipTier {
@@ -35,6 +41,82 @@ export interface MembershipTier {
   benefits: string[];
   isPopular?: boolean;
   colorScheme: string;
+}
+
+export interface Wallet {
+  id: string;
+  userId: string;
+  tenantId: string;
+  currency: string; // "NGN"
+  balance: number;
+  availableBalance: number;
+  totalEarnings: number;
+  totalDeposits: number;
+  totalWithdrawals: number;
+  updatedAt: string;
+}
+
+export interface LedgerTransaction {
+  id: string;
+  userId: string;
+  tenantId: string;
+  type: "deposit" | "withdrawal" | "membership_fee" | "earning" | "commission" | "order_payment" | "marketplace_payout";
+  amount: number;
+  fee: number;
+  currency: string;
+  balanceAfter: number;
+  status: "completed" | "pending" | "failed";
+  reference: string;
+  description: string;
+  paymentMethod?: string;
+  createdAt: string;
+}
+
+export interface BusinessLead {
+  id: string;
+  userId: string;
+  tenantId: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  country: string;
+  status: "new" | "contacted" | "qualified" | "proposal" | "won" | "lost";
+  value: number;
+  source: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface NetworkMember {
+  id: string;
+  sponsorId: string;
+  userId: string;
+  name: string;
+  country: string;
+  tier: MembershipTierType;
+  status: "active" | "inactive";
+  joinedAt: string;
+  commissionEarned: number;
+}
+
+export interface ReferralStats {
+  userId: string;
+  referralCode: string;
+  totalInvited: number;
+  activeMembers: number;
+  totalCommissionNGN: number;
+}
+
+export interface OnboardingProgress {
+  userId: string;
+  accountCreated: boolean;
+  membershipActivated: boolean;
+  watchedTour: boolean;
+  profileCompleted: boolean;
+  businessSetup: boolean;
+  firstActionCompleted: boolean;
+  isCompleted: boolean;
 }
 
 export interface TreeLeaf {
@@ -95,69 +177,83 @@ export interface Hub {
   id: string;
   category: string;
   slug: string;
+  name?: string;
+  title?: string;
   description: string;
   iconName: string;
   color: string;
-  membersCount: number;
-  postsCount: number;
+  totalPosts?: number;
+  activeMembersCount?: number;
+  membersCount?: number;
+  postsCount?: number;
 }
 
 export interface HubPost {
   id: string;
-  hubId: string;
+  hubId?: string;
   hubSlug: string;
-  hubCategory: string;
+  hubCategory?: string;
   authorMemberId: string;
   authorName: string;
   authorPhoto: string;
-  authorRole: string;
   authorCountry: string;
+  authorRole: string;
   title: string;
-  body: string;
-  tags: string[];
+  content?: string;
+  body?: string;
+  tags?: string[];
+  imageUrl?: string;
   likesCount: number;
   commentsCount: number;
   createdAt: string;
-  imageUrl?: string;
+  isPinned?: boolean;
 }
 
 export interface AccreditationRequest {
   id: string;
   name: string;
-  category:
-    | "Government"
-    | "Traditional Institutions"
-    | "Private Sector"
-    | "Diplomatic Community"
-    | "Youth Representatives"
-    | "Women Leaders"
-    | "African Diaspora";
-  organization: string;
-  title: string;
-  country: string;
-  guestCount: number;
-  dietaryNotes: string;
   email: string;
+  phone?: string;
+  category:
+    | "Traditional Royalty & Monarchy"
+    | "African Union & Diplomatic Corps"
+    | "Ministerial & Government Delegation"
+    | "Diaspora Cultural Leader"
+    | "Global Partner / Sponsor Executive"
+    | "Agribusiness & Trade Leader"
+    | "Youth & Cultural Ambassador"
+    | "Diplomatic Community"
+    | string;
+  organization: string;
+  country: string;
+  title?: string;
+  guestCount?: number;
+  dietaryNotes?: string;
+  tableSeatZone?: string;
+  passportOrIdNumber?: string;
+  dietaryRequirements?: string;
   status: "Pending" | "Approved" | "Declined";
   createdAt: string;
-  tableSeatZone?: string;
 }
 
 export interface FestivalEvent {
   id: string;
   name: string;
-  description: string;
-  date: string;
-  time: string;
   subEventType:
     | "cuisine-expo"
     | "chefs-championship"
     | "food-security-summit"
     | "cultural-village"
     | "marketplace"
+    | "masterclasses"
+    | "indigenous-showcase"
+    | "peace-banquet"
     | "youth-innovation"
-    | "women-leadership"
-    | "peace-dinner";
+    | "food-art-expo"
+    | string;
+  description: string;
+  date: string;
+  time: string;
   venueLocation: string;
   hallName: string;
   capacity: number;
@@ -165,68 +261,82 @@ export interface FestivalEvent {
   speakers: { name: string; role: string; country: string; photoUrl: string }[];
   chefs: { name: string; specialty: string; country: string; photoUrl: string }[];
   coverImage: string;
-  isFeatured?: boolean;
+  isFeatured: boolean;
 }
 
 export interface BusinessOpportunity {
   id: string;
-  postedByMemberId: string;
-  posterName: string;
-  posterCompany: string;
+  title: string;
   category:
+    | "Agribusiness & Processing"
+    | "Culinary Tourism"
+    | "Export & Logistics"
+    | "Packaging & Food Tech"
+    | "Hospitality Franchise"
     | "Trade Partnerships"
     | "Agribusiness Investments"
-    | "Tourism Opportunities"
     | "Food Export Networks"
-    | "Food Technology"
-    | "Cross-Border Partnerships";
+    | "Food Technology";
   country: string;
-  title: string;
+  investmentSizeUSD?: string;
   description: string;
-  investmentRange: string;
-  contactInfo: string;
+  posterName: string;
+  posterCompany: string;
+  posterCountry?: string;
+  postedByMemberId: string;
+  contactEmail?: string;
+  contactInfo?: string;
+  investmentRange?: string;
+  roiTimeline?: string;
+  status?: string;
   createdAt: string;
-  status: "Open" | "In Negotiation" | "Closed";
 }
 
 export interface Vendor {
   id: string;
-  memberId: string;
   businessName: string;
+  contactName?: string;
   country: string;
-  category: string;
+  city?: string;
+  category:
+    | "Spices & Seasonings"
+    | "Ancient Grains & Flours"
+    | "Craft Cookware & Terracotta"
+    | "Indigenous Beverages"
+    | "Organic Oils & Butters"
+    | "Artisanal Foods"
+    | "Traditional Ingredients & Spices"
+    | string;
   logoUrl: string;
+  coverImage?: string;
   description: string;
   rating: number;
-  isApproved: boolean;
-  totalProducts: number;
+  productsCount?: number;
+  totalProducts?: number;
+  isVerified?: boolean;
+  isApproved?: boolean;
+  memberId?: string;
 }
 
 export interface MarketplaceListing {
   id: string;
   vendorId: string;
   vendorName: string;
-  vendorCountry: string;
-  category:
-    | "Food Products"
-    | "Agricultural Produce"
-    | "Traditional Ingredients"
-    | "Food Equipment"
-    | "Cultural Products"
-    | "Tourism Packages"
-    | "Handicrafts"
-    | "Fashion & Textiles"
-    | "Books & Publications";
+  vendorCountry?: string;
   title: string;
+  category: string;
   description: string;
-  price: number;
-  currency: string;
   priceNGN: number;
+  price?: number;
+  currency?: string;
+  weightGrams?: number;
+  stockQuantity?: number;
+  stock?: number;
   images: string[];
-  stock: number;
+  originCountry?: string;
+  originRegion?: string;
   rating: number;
   reviewsCount: number;
-  originRegion: string;
   isFeatured?: boolean;
 }
 
@@ -235,7 +345,8 @@ export interface OrderItem {
   title: string;
   price: number;
   quantity: number;
-  image: string;
+  vendorName?: string;
+  image?: string;
 }
 
 export interface Order {
@@ -243,60 +354,71 @@ export interface Order {
   buyerMemberId: string;
   buyerName: string;
   buyerEmail: string;
+  shippingAddress: string;
+  shippingCountry?: string;
   items: OrderItem[];
   totalAmountNGN: number;
-  status: "Pending" | "Processing" | "Shipped" | "Completed" | "Cancelled";
-  shippingAddress: string;
-  shippingCountry: string;
+  status: "Processing" | "Packed" | "Shipped" | "Delivered" | "Cancelled" | "Completed" | string;
   trackingNumber?: string;
   createdAt: string;
+  paymentMethod?: string;
 }
 
 export interface MediaPost {
   id: string;
-  category:
-    | "Latest News"
-    | "Festival Updates"
-    | "Video Gallery"
-    | "Documentaries"
-    | "Interviews"
-    | "Success Stories"
-    | "Country Highlights";
-  title: string;
   slug: string;
-  summary: string;
-  body: string;
-  mediaUrl: string;
-  mediaType: "article" | "video" | "press";
-  publishedAt: string;
-  readTime: string;
+  title: string;
+  excerpt?: string;
+  summary?: string;
+  content?: string;
+  body?: string;
+  category:
+    | "Press Release"
+    | "Editorial Dispatch"
+    | "Heritage Feature"
+    | "Photo Gallery"
+    | "Video Dispatch"
+    | "Festival Updates"
+    | "Culinary Diplomacy"
+    | "Trade & Economy"
+    | string;
   author: string;
-  imageUrl: string;
+  publishedAt: string;
+  publishedDate?: string;
+  coverImage?: string;
+  imageUrl?: string;
+  mediaUrl?: string;
+  mediaType?: string;
   videoDuration?: string;
+  readTimeMinutes?: number;
+  readTime?: string;
+  tags?: string[];
 }
 
 export interface Sponsor {
   id: string;
-  companyName: string;
-  tier: "Platinum Partner" | "Diamond Partner" | "Gold Partner" | "Silver Partner" | "Bronze Partner";
-  priceNGN: number;
-  priceFormatted: string;
+  name?: string;
+  companyName?: string;
+  tier: string;
+  priceNGN?: number;
+  priceFormatted?: string;
   logoUrl: string;
   country: string;
   description: string;
   websiteUrl?: string;
-  contactEmail: string;
-  benefits: string[];
+  contactEmail?: string;
+  benefits?: string[];
 }
 
 export interface PeaceWallEntry {
   id: string;
-  memberId?: string | null;
-  guestName?: string | null;
-  authorPhoto?: string;
+  memberId?: string;
+  guestName?: string;
   country: string;
+  city?: string;
   message: string;
-  isApproved: boolean;
+  authorPhoto?: string;
+  isApproved?: boolean;
   likesCount: number;
   createdAt: string;
 }
@@ -356,11 +478,12 @@ export interface PeaceTableDish {
 
 export interface AppNotification {
   id: string;
-  recipientMemberId: string; // or "all" or role
+  userId?: string;
+  recipientMemberId: string; // or "all" or specific memberId
   title: string;
   message: string;
   timestamp: string;
-  type: "booking" | "order" | "accreditation" | "tree" | "community" | "trade" | "system";
+  type: "booking" | "order" | "accreditation" | "tree" | "community" | "trade" | "system" | "financial" | "lead" | "network";
   linkUrl: string;
   isRead: boolean;
 }
@@ -375,6 +498,3 @@ export interface AuditLog {
   ipAddress: string;
   status: "Success" | "Flagged" | "Pending";
 }
-
-
-

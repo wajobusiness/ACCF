@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Member } from "@/types/master-models";
+import { Member, OnboardingProgress } from "@/types/master-models";
 import { DEMO_MEMBERS } from "@/lib/demo-data/members";
 import { dataProvider } from "@/lib/data-provider";
 
@@ -9,87 +9,149 @@ interface AuthContextType {
   user: Member | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  loginAsPersona: (memberId: string) => void;
-  loginWithEmail: (email: string) => boolean;
-  registerUser: (data: Partial<Member>) => Promise<Member>;
+  loginAsPersona: (memberId: string) => Promise<Member | null>;
+  loginWithEmail: (email: string, password?: string) => Promise<{ success: boolean; member?: Member; error?: string }>;
+  registerUser: (data: {
+    name: string;
+    email: string;
+    phone?: string;
+    country: string;
+    password?: string;
+    sponsorId?: string;
+    role?: Member["role"];
+  }) => Promise<Member>;
   logout: () => void;
   updateProfile: (data: Partial<Member>) => Promise<Member>;
   availablePersonas: Member[];
+  onboarding: OnboardingProgress | null;
+  refreshOnboarding: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Default to Standard Member Persona (Amina Okafor) for demo continuity
   const [user, setUser] = useState<Member | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check localStorage for saved session
-    const savedUserId = typeof window !== "undefined" ? localStorage.getItem("accf_demo_user_id") : null;
-    if (savedUserId) {
-      const found = DEMO_MEMBERS.find((m) => m.id === savedUserId);
-      if (found) {
-        setUser(found);
+    async function initAuth() {
+      // Check saved session in browser
+      const savedUserId = typeof window !== "undefined" ? localStorage.getItem("accf_auth_user_id") : null;
+      if (savedUserId) {
+        const found = await dataProvider.getMemberById(savedUserId);
+        if (found) {
+          setUser(found);
+          const prog = await dataProvider.getOnboardingProgress(found.id);
+          setOnboarding(prog);
+        } else {
+          // Fallback to initial demo persona 1
+          const initial = await dataProvider.getMemberById("mem-01");
+          if (initial) {
+            setUser(initial);
+            const prog = await dataProvider.getOnboardingProgress(initial.id);
+            setOnboarding(prog);
+          }
+        }
       } else {
-        setUser(DEMO_MEMBERS[0]); // Amina Okafor
+        const initial = await dataProvider.getMemberById("mem-01");
+        if (initial) {
+          setUser(initial);
+          const prog = await dataProvider.getOnboardingProgress(initial.id);
+          setOnboarding(prog);
+        }
       }
-    } else {
-      setUser(DEMO_MEMBERS[0]);
+      setIsLoading(false);
     }
-    setIsLoading(false);
+    initAuth();
   }, []);
 
-  const loginAsPersona = (memberId: string) => {
-    const found = DEMO_MEMBERS.find((m) => m.id === memberId);
-    if (found) {
-      setUser(found);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("accf_demo_user_id", found.id);
-      }
+  const refreshOnboarding = async () => {
+    if (user) {
+      const prog = await dataProvider.getOnboardingProgress(user.id);
+      setOnboarding(prog);
     }
   };
 
-  const loginWithEmail = (email: string) => {
-    const found = DEMO_MEMBERS.find((m) => m.email.toLowerCase() === email.toLowerCase());
+  const loginAsPersona = async (memberId: string): Promise<Member | null> => {
+    setIsLoading(true);
+    const found = await dataProvider.getMemberById(memberId);
     if (found) {
       setUser(found);
       if (typeof window !== "undefined") {
-        localStorage.setItem("accf_demo_user_id", found.id);
+        localStorage.setItem("accf_auth_user_id", found.id);
       }
-      return true;
+      const prog = await dataProvider.getOnboardingProgress(found.id);
+      setOnboarding(prog);
+      setIsLoading(false);
+      return found;
     }
-    // If not found, create guest member session
-    const newGuest: Member = {
-      id: `mem-${Date.now()}`,
-      name: email.split("@")[0].replace(".", " "),
-      email: email,
-      photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-      country: "Nigeria",
-      tier: "Standard",
-      chairNo: `AKDT-000${Math.floor(1000 + Math.random() * 9000)}`,
-      joinDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      pledgeText: "Breaking the Kolanut for the Peace of Africa.",
-      isVerified: true,
-      role: "member",
-    };
-    setUser(newGuest);
-    return true;
+    setIsLoading(false);
+    return null;
   };
 
-  const registerUser = async (data: Partial<Member>): Promise<Member> => {
-    const created = await dataProvider.createMember(data);
-    setUser(created);
+  const loginWithEmail = async (email: string, password?: string): Promise<{ success: boolean; member?: Member; error?: string }> => {
+    setIsLoading(true);
+    const trimmed = email.trim().toLowerCase();
+    let found = await dataProvider.getMemberByEmail(trimmed);
+
+    if (!found) {
+      // If not registered yet, auto-register as new member
+      found = await dataProvider.createMember({
+        email: trimmed,
+        name: trimmed.split("@")[0].replace(/[._]/g, " "),
+        country: "Nigeria",
+        status: "pending_activation",
+      });
+    }
+
+    setUser(found);
     if (typeof window !== "undefined") {
-      localStorage.setItem("accf_demo_user_id", created.id);
+      localStorage.setItem("accf_auth_user_id", found.id);
     }
-    return created;
+    const prog = await dataProvider.getOnboardingProgress(found.id);
+    setOnboarding(prog);
+    setIsLoading(false);
+    return { success: true, member: found };
+  };
+
+  const registerUser = async (data: {
+    name: string;
+    email: string;
+    phone?: string;
+    country: string;
+    password?: string;
+    sponsorId?: string;
+    role?: Member["role"];
+  }): Promise<Member> => {
+    setIsLoading(true);
+    const newMember = await dataProvider.createMember({
+      name: data.name,
+      email: data.email.trim().toLowerCase(),
+      phone: data.phone,
+      country: data.country,
+      password: data.password,
+      sponsorId: data.sponsorId,
+      role: data.role || "member",
+      status: "pending_activation",
+      isVerified: true,
+    });
+
+    setUser(newMember);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("accf_auth_user_id", newMember.id);
+    }
+    const prog = await dataProvider.getOnboardingProgress(newMember.id);
+    setOnboarding(prog);
+    setIsLoading(false);
+    return newMember;
   };
 
   const logout = () => {
     setUser(null);
+    setOnboarding(null);
     if (typeof window !== "undefined") {
-      localStorage.removeItem("accf_demo_user_id");
+      localStorage.removeItem("accf_auth_user_id");
     }
   };
 
@@ -111,7 +173,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         registerUser,
         logout,
         updateProfile,
-        availablePersonas: DEMO_MEMBERS.slice(0, 9),
+        availablePersonas: DEMO_MEMBERS,
+        onboarding,
+        refreshOnboarding,
       }}
     >
       {children}
@@ -126,4 +190,3 @@ export function useAuth() {
   }
   return context;
 }
-

@@ -3,7 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/context/auth-context";
 import { dataProvider } from "@/lib/data-provider";
-import { Order, Booking, TreeLeaf, MeetEatListing, MarketplaceListing, BusinessOpportunity } from "@/types/master-models";
+import {
+  Wallet,
+  LedgerTransaction,
+  BusinessLead,
+  NetworkMember,
+  ReferralStats,
+  Order,
+  Booking,
+  AppNotification,
+} from "@/types/master-models";
 import { formatNGN } from "@/lib/utils";
 import Link from "next/link";
 import {
@@ -28,797 +37,1127 @@ import {
   Star,
   ChevronRight,
   Plus,
+  ArrowUpRight,
+  ArrowDownLeft,
+  RefreshCw,
+  Copy,
+  Users,
+  Search,
+  Bell,
+  SlidersHorizontal,
+  Layers,
+  FileText,
+  Activity,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function DashboardPage() {
-  const { user, logout, loginAsPersona } = useAuth();
+  const { user, logout, onboarding, refreshOnboarding } = useAuth();
+
+  // State Management
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "wallet" | "crm" | "network" | "orders" | "dining" | "settings"
+  >("overview");
+  const [timeRange, setTimeRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
+
+  // Authoritative Data
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
+  const [leads, setLeads] = useState<BusinessLead[]>([]);
+  const [network, setNetwork] = useState<NetworkMember[]>([]);
+  const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [hostListings, setHostListings] = useState<MeetEatListing[]>([]);
-  const [vendorProducts, setVendorProducts] = useState<MarketplaceListing[]>([]);
-  const [businessDeals, setBusinessDeals] = useState<BusinessOpportunity[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Modals & Action Forms
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showAddLeadModal, setShowAddLeadModal] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<number>(50000);
+  const [depositMethod, setDepositMethod] = useState<string>("Paystack");
+  const [withdrawAmount, setWithdrawAmount] = useState<number>(20000);
+  const [withdrawBank, setWithdrawBank] = useState<string>("Zenith Bank - 2049102931");
+
+  // New Lead Form State
+  const [newLeadName, setNewLeadName] = useState("");
+  const [newLeadCompany, setNewLeadCompany] = useState("");
+  const [newLeadEmail, setNewLeadEmail] = useState("");
+  const [newLeadPhone, setNewLeadPhone] = useState("");
+  const [newLeadCountry, setNewLeadCountry] = useState("Nigeria");
+  const [newLeadValue, setNewLeadValue] = useState<number>(150000);
+  const [newLeadNotes, setNewLeadNotes] = useState("");
+
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Load strictly user-scoped authoritative data
+  const loadUserData = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const [w, tx, ld, net, ref, ords, bks, notifs] = await Promise.all([
+        dataProvider.getWallet(user.id),
+        dataProvider.getLedgerTransactions(user.id),
+        dataProvider.getLeads(user.id),
+        dataProvider.getNetworkMembers(user.id),
+        dataProvider.getReferralStats(user.id),
+        dataProvider.getOrders(user.id),
+        dataProvider.getBookings(user.id),
+        dataProvider.getNotifications(user.id),
+      ]);
+      setWallet(w);
+      setTransactions(tx);
+      setLeads(ld);
+      setNetwork(net);
+      setReferralStats(ref);
+      setOrders(ords);
+      setBookings(bks);
+      setNotifications(notifs);
+    } catch (err) {
+      console.error("Error loading dashboard data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function load() {
-      if (user) {
-        const ords = await dataProvider.getOrders(user.id);
-        setOrders(ords);
-        const bks = await dataProvider.getBookings();
-        setBookings(bks);
-        const hl = await dataProvider.getMeetEatListings();
-        setHostListings(hl.filter((h) => h.hostMemberId === user.id || h.hostName.includes(user.name.split(" ")[0])));
-        const vp = await dataProvider.getMarketplaceListings();
-        setVendorProducts(vp.filter((p) => p.vendorName.includes(user.name.split(" ")[0])));
-        const bd = await dataProvider.getBusinessOpportunities();
-        setBusinessDeals(bd.filter((d) => d.postedByMemberId === user.id || d.posterName.includes(user.name.split(" ")[0])));
-      }
-    }
-    load();
+    loadUserData();
   }, [user]);
 
   if (!user) {
     return (
       <div className="min-h-screen bg-accf-ivory flex items-center justify-center p-6">
-        <div className="bg-white p-8 rounded-2xl border border-accf-line-dark text-center space-y-4 max-w-md">
+        <div className="bg-white p-8 rounded-3xl border border-accf-line-dark text-center space-y-4 max-w-md shadow-xl">
           <User className="w-12 h-12 text-accf-gold mx-auto" />
-          <h2 className="font-serif font-bold text-2xl text-accf-charcoal">Member Sign In Required</h2>
+          <h2 className="font-serif font-bold text-2xl text-accf-charcoal">Sign In Required</h2>
           <p className="text-xs text-accf-muted">
-            Please log in or select one of the 9 simulated demo personas to access your command center.
+            Please authenticate to access your isolated continental dashboard and financial ledger.
           </p>
-          <Link
-            href="/auth/login"
-            className="px-6 py-2.5 rounded bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider block"
-          >
-            Go to Login / Persona Selector
-          </Link>
+          <div className="flex gap-3 pt-2">
+            <Link
+              href="/auth/login"
+              className="flex-1 py-2.5 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider text-center"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/auth/register"
+              className="flex-1 py-2.5 rounded-xl bg-accf-green text-accf-ivory font-bold text-xs uppercase tracking-wider text-center"
+            >
+              Register
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Determine available tabs based on user role
-  const isHost = user.role === "host" || user.isHost || user.id === "mem-04";
-  const isVendor = user.role === "vendor" || user.isVendor || user.id === "mem-05";
-  const isBusiness = user.role === "business" || user.id === "mem-06";
-  const isAmbassador = user.role === "ambassador" || user.tier === "Continental Ambassador" || user.id === "mem-03";
-  const isParticipant = user.id === "mem-07";
-  const isModerator = user.role === "moderator" || user.id === "mem-08";
-  const isAdmin = user.role === "admin" || user.id === "mem-09";
+  // Action: Deposit
+  const handleExecuteDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (depositAmount <= 0) return;
+    try {
+      await dataProvider.depositFunds(user.id, depositAmount, depositMethod);
+      setShowDepositModal(false);
+      await loadUserData();
+      confetti({ particleCount: 60, spread: 70 });
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  // Action: Withdraw
+  const handleExecuteWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (withdrawAmount <= 0) return;
+    try {
+      await dataProvider.withdrawFunds(user.id, withdrawAmount, withdrawBank);
+      setShowWithdrawModal(false);
+      await loadUserData();
+      confetti({ particleCount: 60, spread: 70 });
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  // Action: Add Lead
+  const handleCreateLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLeadName || !newLeadCompany) return;
+    try {
+      await dataProvider.createLead(user.id, {
+        name: newLeadName,
+        company: newLeadCompany,
+        email: newLeadEmail,
+        phone: newLeadPhone,
+        country: newLeadCountry,
+        status: "new",
+        value: newLeadValue,
+        source: "Dashboard CRM Entry",
+        notes: newLeadNotes,
+      });
+      setShowAddLeadModal(false);
+      setNewLeadName("");
+      setNewLeadCompany("");
+      setNewLeadEmail("");
+      setNewLeadPhone("");
+      setNewLeadNotes("");
+      await loadUserData();
+      confetti({ particleCount: 50, spread: 60 });
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleCopyReferral = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(
+        `${window.location.origin}/auth/register?ref=${referralStats?.referralCode || user.chairNo}`
+      );
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
+
+  // Calculate Lead Pipeline Value
+  const totalPipelineValue = leads.reduce((acc, l) => acc + l.value, 0);
 
   return (
-    <div className="min-h-screen bg-accf-ivory py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Top Header Card */}
-        <div className="bg-accf-charcoal text-accf-ivory rounded-3xl p-6 sm:p-8 border border-accf-line shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
+    <div className="min-h-screen bg-accf-ivory flex flex-col">
+      {/* Top Command Header */}
+      <div className="bg-accf-charcoal text-accf-ivory border-b border-accf-line px-4 sm:px-6 lg:px-8 py-5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
             <img
               src={user.photoUrl}
               alt={user.name}
-              className="w-20 h-20 rounded-full object-cover border-2 border-accf-gold shadow-lg"
+              className="w-14 h-14 rounded-full object-cover border-2 border-accf-gold shadow-md"
             />
-            <div className="space-y-1 text-center sm:text-left">
-              <div className="flex items-center justify-center sm:justify-start gap-2">
-                <h1 className="font-serif font-bold text-2xl sm:text-3xl text-accf-ivory">{user.name}</h1>
-                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-accf-gold text-accf-charcoal font-bold uppercase">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-serif font-bold text-xl text-accf-ivory">{user.name}</h1>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accf-gold text-accf-charcoal font-bold uppercase">
                   {user.tier}
                 </span>
+                {user.isVerified && (
+                  <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Verified
+                  </span>
+                )}
               </div>
               <div className="text-xs font-mono text-accf-gold-soft">
-                Chair ID: <strong className="text-accf-gold">{user.chairNo}</strong> &bull; {user.city ? `${user.city}, ` : ""}{user.country}
+                Chair ID: <strong className="text-accf-gold">{user.chairNo}</strong> &bull; {user.country}
               </div>
-              <p className="text-xs text-accf-ivory/70 italic line-clamp-1">
-                &ldquo;{user.pledgeText}&rdquo;
-              </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="px-4 py-2.5 rounded bg-accf-maroon text-accf-ivory text-xs font-bold hover:bg-accf-maroon/80 border border-accf-gold transition-colors shadow"
-              >
-                Secretariat Admin Console &rarr;
-              </Link>
-            )}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowDepositModal(true)}
+              className="px-4 py-2 rounded-xl bg-accf-green text-accf-ivory text-xs font-bold hover:bg-accf-green-light border border-accf-line/40 transition-all flex items-center gap-1.5 shadow"
+            >
+              <ArrowDownLeft className="w-3.5 h-3.5 text-accf-gold" />
+              <span>Deposit</span>
+            </button>
+            <button
+              onClick={() => setShowWithdrawModal(true)}
+              className="px-4 py-2 rounded-xl bg-accf-charcoal-card border border-accf-line text-accf-gold text-xs font-bold hover:border-accf-gold transition-all flex items-center gap-1.5"
+            >
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>Withdraw</span>
+            </button>
             <Link
               href={`/members/${user.id}`}
-              className="px-4 py-2.5 rounded bg-accf-green text-accf-ivory text-xs font-semibold hover:bg-accf-green-light border border-accf-line/40 transition-colors"
+              className="px-4 py-2 rounded-xl bg-accf-charcoal-card border border-accf-line text-accf-ivory/80 text-xs font-semibold hover:text-accf-gold"
             >
               Public Pass &rarr;
             </Link>
             <button
               onClick={logout}
-              className="px-4 py-2.5 rounded bg-accf-charcoal-card border border-accf-line text-accf-maroon text-xs font-semibold hover:border-accf-gold"
+              className="px-3.5 py-2 rounded-xl bg-accf-charcoal-card border border-accf-line text-accf-maroon text-xs font-semibold hover:border-accf-gold"
             >
               Sign Out
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Dashboard Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-accf-line-dark pb-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-              activeTab === "overview"
-                ? "bg-accf-green text-accf-gold shadow"
-                : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Command Overview</span>
-          </button>
+      {/* Main Dashboard Layout: Sidebar + Workspace */}
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col md:flex-row gap-8">
+        {/* Navigation Sidebar */}
+        <div className="w-full md:w-64 flex-shrink-0 space-y-6">
+          <div className="bg-white rounded-3xl p-4 border border-accf-line-dark shadow-sm space-y-1">
+            {[
+              { id: "overview", label: "Overview & Analytics", icon: Activity },
+              { id: "wallet", label: "Wallet & Ledger", icon: DollarSign },
+              { id: "crm", label: "Business Leads (CRM)", icon: Briefcase },
+              { id: "network", label: "Network & Referrals", icon: Users },
+              { id: "orders", label: "Marketplace Orders", icon: ShoppingBag },
+              { id: "dining", label: "Meet & Eat Dining", icon: UtensilsCrossed },
+              { id: "settings", label: "Account Settings", icon: User },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isSel = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`w-full px-4 py-3 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all ${
+                    isSel
+                      ? "bg-accf-green text-accf-gold shadow-md font-bold"
+                      : "text-accf-charcoal hover:bg-accf-ivory"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isSel ? "text-accf-gold" : "text-accf-muted"}`} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {tab.id === "crm" && leads.length > 0 && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-accf-gold text-accf-charcoal font-bold">
+                      {leads.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-          <button
-            onClick={() => setActiveTab("idcard")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-              activeTab === "idcard"
-                ? "bg-accf-green text-accf-gold shadow"
-                : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            <span>Digital ID Pass</span>
-          </button>
-
-          {/* Role-Specific Tabs */}
-          {isHost && (
+          {/* Quick Referral Invite Card */}
+          <div className="p-5 bg-gradient-to-br from-accf-green-deep to-accf-charcoal text-accf-ivory rounded-3xl border border-accf-gold/50 shadow-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase text-accf-gold font-bold">
+                African Trade Network
+              </span>
+              <Users className="w-4 h-4 text-accf-gold" />
+            </div>
+            <h4 className="font-serif font-bold text-sm text-accf-ivory">Invite Partners to Seat</h4>
+            <p className="text-[11px] text-accf-ivory/70 leading-relaxed">
+              Earn continental commissions on community activations and direct marketplace trade.
+            </p>
             <button
-              onClick={() => setActiveTab("host_studio")}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-                activeTab === "host_studio"
-                  ? "bg-accf-gold text-accf-charcoal shadow"
-                  : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-              }`}
+              onClick={handleCopyReferral}
+              className="w-full py-2.5 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft transition-all shadow flex items-center justify-center gap-1.5"
             >
-              <UtensilsCrossed className="w-4 h-4" />
-              <span>Cultural Host Studio</span>
+              <Copy className="w-3.5 h-3.5" />
+              <span>{copiedLink ? "Link Copied!" : "Copy Referral Link"}</span>
             </button>
-          )}
-
-          {isVendor && (
-            <button
-              onClick={() => setActiveTab("vendor_portal")}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-                activeTab === "vendor_portal"
-                  ? "bg-accf-gold text-accf-charcoal shadow"
-                  : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-              }`}
-            >
-              <Store className="w-4 h-4" />
-              <span>Vendor Storefront</span>
-            </button>
-          )}
-
-          {isBusiness && (
-            <button
-              onClick={() => setActiveTab("trade_desk")}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-                activeTab === "trade_desk"
-                  ? "bg-accf-gold text-accf-charcoal shadow"
-                  : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-              }`}
-            >
-              <Briefcase className="w-4 h-4" />
-              <span>B2B Trade Desk</span>
-            </button>
-          )}
-
-          {isAmbassador && (
-            <button
-              onClick={() => setActiveTab("ambassador_suite")}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-                activeTab === "ambassador_suite"
-                  ? "bg-accf-gold text-accf-charcoal shadow"
-                  : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Ambassador Suite</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab("meeteat")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-              activeTab === "meeteat"
-                ? "bg-accf-green text-accf-gold shadow"
-                : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-            }`}
-          >
-            <UtensilsCrossed className="w-4 h-4" />
-            <span>Meet &amp; Eat Dining</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("orders")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-              activeTab === "orders"
-                ? "bg-accf-green text-accf-gold shadow"
-                : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-            }`}
-          >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Marketplace Orders</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("tree")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
-              activeTab === "tree"
-                ? "bg-accf-green text-accf-gold shadow"
-                : "bg-white text-accf-charcoal border border-accf-line-dark hover:border-accf-gold"
-            }`}
-          >
-            <TreePine className="w-4 h-4" />
-            <span>Tree Leaf</span>
-          </button>
+          </div>
         </div>
 
-        {/* TAB: OVERVIEW */}
-        {activeTab === "overview" && (
-          <div className="space-y-8">
-            {/* Primary Action Recommendation Banner (No Dead Ends) */}
-            <div className="p-6 bg-gradient-to-r from-accf-green-deep to-accf-charcoal text-accf-ivory rounded-3xl border border-accf-gold/60 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-1 text-center md:text-left">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-accf-gold font-bold">
-                  Recommended Next Action
-                </div>
-                <h3 className="font-serif font-bold text-xl sm:text-2xl text-accf-ivory">
-                  {isHost
-                    ? "Review and confirm your 2 pending cultural dining requests"
-                    : isVendor
-                    ? "Fulfill order #ORD-2026-9082 and inspect weekly payout"
-                    : isBusiness
-                    ? "Connect with East African Agribusiness buyer matching your deal"
-                    : isAmbassador
-                    ? "Inspect your VIP seat allocation in Zone 1 for the 2km Peace Table"
-                    : "Explore the 1,000 Traditional Dishes and book a dining experience"}
-                </h3>
-                <p className="text-xs text-accf-ivory/70">
-                  {isHost
-                    ? "Keep your hospitality acceptance rate high for Abuja 2026 certification."
-                    : "Stay connected across the 54-nation continental movement."}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  if (isHost) setActiveTab("host_studio");
-                  else if (isVendor) setActiveTab("vendor_portal");
-                  else if (isBusiness) setActiveTab("trade_desk");
-                  else if (isAmbassador) setActiveTab("ambassador_suite");
-                  else setActiveTab("meeteat");
-                }}
-                className="px-6 py-3 rounded bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft transition-all shadow-lg flex-shrink-0"
-              >
-                Proceed Now &rarr;
-              </button>
-            </div>
-
-            {/* Quick Metrics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div
-                onClick={() => setActiveTab("idcard")}
-                className="p-6 bg-white rounded-2xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
-              >
-                <div className="text-xs font-mono uppercase text-accf-muted">Chair Sequence</div>
-                <div className="font-serif font-bold text-2xl text-accf-charcoal">{user.chairNo}</div>
-                <div className="text-[10px] text-emerald-600 font-mono">● Verified &amp; Active</div>
-              </div>
-
-              <div
-                onClick={() => setActiveTab("meeteat")}
-                className="p-6 bg-white rounded-2xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
-              >
-                <div className="text-xs font-mono uppercase text-accf-muted">Meet &amp; Eat Meals</div>
-                <div className="font-serif font-bold text-2xl text-accf-green">
-                  {isHost ? "8 Hosted" : `${bookings.length} Booked`}
-                </div>
-                <div className="text-[10px] text-accf-muted font-mono">Pan-African Friendship</div>
-              </div>
-
-              <div
-                onClick={() => setActiveTab("orders")}
-                className="p-6 bg-white rounded-2xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
-              >
-                <div className="text-xs font-mono uppercase text-accf-muted">
-                  {isVendor ? "Vendor Sales" : "Marketplace Orders"}
-                </div>
-                <div className="font-serif font-bold text-2xl text-accf-gold">
-                  {isVendor ? "₦1,240,000" : `${orders.length} Orders`}
-                </div>
-                <div className="text-[10px] text-accf-muted font-mono">
-                  {isVendor ? "14 Products Sold" : "Direct African Trade"}
-                </div>
-              </div>
-
-              <div
-                onClick={() => setActiveTab("tree")}
-                className="p-6 bg-white rounded-2xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
-              >
-                <div className="text-xs font-mono uppercase text-accf-muted">Kolanut Tree Leaf</div>
-                <div className="font-serif font-bold text-2xl text-accf-maroon">Planted</div>
-                <div className="text-[10px] text-accf-muted font-mono">{user.country} Canopy</div>
-              </div>
-            </div>
-
-            {/* Cross-Platform Ecosystem Navigation Hub */}
-            <div className="p-8 bg-white rounded-3xl border border-accf-line-dark shadow-sm space-y-6">
-              <div>
-                <h3 className="font-serif font-bold text-2xl text-accf-charcoal">
-                  Explore The Continental Ecosystem
-                </h3>
-                <p className="text-xs text-accf-muted mt-1">
-                  Seamlessly navigate between food archives, community channels, trade networks, and peace monuments.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <Link
-                  href="/food"
-                  className="p-4 rounded-xl bg-accf-ivory border border-accf-line-dark hover:border-accf-gold transition-all space-y-1 block group"
-                >
-                  <div className="font-bold text-accf-charcoal group-hover:text-accf-green flex items-center justify-between">
-                    <span>1,000 Traditional Dishes</span>
-                    <span>&rarr;</span>
-                  </div>
-                  <p className="text-accf-muted text-[11px]">Indigenous recipes and culinary heritage across 54 nations.</p>
-                </Link>
-
-                <Link
-                  href="/community"
-                  className="p-4 rounded-xl bg-accf-ivory border border-accf-line-dark hover:border-accf-gold transition-all space-y-1 block group"
-                >
-                  <div className="font-bold text-accf-charcoal group-hover:text-accf-green flex items-center justify-between">
-                    <span>Community Hubs</span>
-                    <span>&rarr;</span>
-                  </div>
-                  <p className="text-accf-muted text-[11px]">10 forum channels connecting farmers, chefs, and leaders.</p>
-                </Link>
-
-                <Link
-                  href="/marketplace"
-                  className="p-4 rounded-xl bg-accf-ivory border border-accf-line-dark hover:border-accf-gold transition-all space-y-1 block group"
-                >
-                  <div className="font-bold text-accf-charcoal group-hover:text-accf-green flex items-center justify-between">
-                    <span>Africa Marketplace</span>
-                    <span>&rarr;</span>
-                  </div>
-                  <p className="text-accf-muted text-[11px]">Shop authentic ingredients, cookware, and spices.</p>
-                </Link>
-
-                <Link
-                  href="/peace-table"
-                  className="p-4 rounded-xl bg-accf-ivory border border-accf-line-dark hover:border-accf-gold transition-all space-y-1 block group"
-                >
-                  <div className="font-bold text-accf-charcoal group-hover:text-accf-green flex items-center justify-between">
-                    <span>2km African Peace Table</span>
-                    <span>&rarr;</span>
-                  </div>
-                  <p className="text-accf-muted text-[11px]">Banquet blueprints and delegate accreditation.</p>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: CULTURAL HOST STUDIO */}
-        {activeTab === "host_studio" && isHost && (
-          <div className="space-y-8">
-            <div className="bg-white rounded-3xl p-8 border border-accf-line-dark shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-accf-line-dark pb-4">
-                <div>
-                  <h3 className="font-serif font-bold text-2xl text-accf-charcoal">Cultural Host Studio</h3>
-                  <p className="text-xs text-accf-muted">Manage your authentic dining experiences, guest reservations, and reviews.</p>
-                </div>
-                <button
-                  onClick={() => alert("Simulated: New Cultural Dining Experience Creator modal initialized.")}
-                  className="px-4 py-2 rounded bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft flex items-center gap-1.5 shadow"
-                >
-                  <Plus className="w-4 h-4" />
-                  List New Dining Experience
-                </button>
-              </div>
-
-              {/* Inbound Booking Requests */}
-              <div className="space-y-3">
-                <h4 className="font-serif font-bold text-lg text-accf-charcoal">Inbound Guest Requests</h4>
-                <div className="p-4 bg-accf-ivory rounded-xl border border-accf-line-dark flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-serif font-bold text-sm text-accf-charcoal">Amina Okafor</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accf-green text-accf-gold">2 Guests</span>
+        {/* Dynamic Workspace Container */}
+        <div className="flex-1 space-y-8 min-w-0">
+          {/* TAB 1: OVERVIEW */}
+          {activeTab === "overview" && (
+            <div className="space-y-8">
+              {/* Contextual Onboarding Progress (if not 100% complete) */}
+              {onboarding && !onboarding.isCompleted && (
+                <div className="p-6 bg-gradient-to-r from-accf-green-deep to-accf-charcoal text-accf-ivory rounded-3xl border border-accf-gold/60 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-accf-gold font-bold">
+                        Getting Started Guide
+                      </span>
+                      <h3 className="font-serif font-bold text-xl text-accf-ivory">
+                        Complete Your Continental Setup
+                      </h3>
                     </div>
-                    <p className="text-xs text-accf-muted">Experience: <strong>Sahelian Feast &amp; Ancient Grains</strong> &bull; Oct 14, 2026</p>
-                    <p className="text-[11px] text-accf-charcoal/70 italic">&ldquo;Excited to learn about ancient fonio preparation!&rdquo;</p>
+                    <Link
+                      href="/onboarding"
+                      className="px-4 py-2 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft"
+                    >
+                      Resume Onboarding &rarr;
+                    </Link>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        alert("Guest Booking Accepted! Directional instructions sent to guest.");
-                        confetti();
-                      }}
-                      className="px-3.5 py-1.5 rounded bg-accf-green text-accf-ivory font-bold text-xs hover:bg-accf-green-light"
-                    >
-                      Accept Booking
-                    </button>
-                    <button
-                      onClick={() => alert("Booking rescheduled.")}
-                      className="px-3 py-1.5 rounded bg-accf-ivory text-accf-charcoal border border-accf-line-dark text-xs hover:border-accf-gold"
-                    >
-                      Reschedule
-                    </button>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+                    <div className="p-2.5 bg-black/30 rounded-xl flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-accf-gold flex-shrink-0" />
+                      <span>Account Created</span>
+                    </div>
+                    <div className="p-2.5 bg-black/30 rounded-xl flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-accf-gold flex-shrink-0" />
+                      <span>Seat Activated</span>
+                    </div>
+                    <div className="p-2.5 bg-black/30 rounded-xl flex items-center gap-2">
+                      {onboarding.watchedTour ? (
+                        <CheckCircle2 className="w-4 h-4 text-accf-gold flex-shrink-0" />
+                      ) : (
+                        <Clock className="w-4 h-4 text-accf-muted flex-shrink-0" />
+                      )}
+                      <span>Platform Tour</span>
+                    </div>
+                    <div className="p-2.5 bg-black/30 rounded-xl flex items-center gap-2">
+                      {onboarding.profileCompleted ? (
+                        <CheckCircle2 className="w-4 h-4 text-accf-gold flex-shrink-0" />
+                      ) : (
+                        <Clock className="w-4 h-4 text-accf-muted flex-shrink-0" />
+                      )}
+                      <span>Profile Setup</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Authoritative Primary Metrics Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {/* Metric 1: Available Wallet Balance */}
+                <div
+                  onClick={() => setActiveTab("wallet")}
+                  className="p-6 bg-white rounded-3xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs font-mono uppercase text-accf-muted">
+                    <span>Available Balance</span>
+                    <DollarSign className="w-4 h-4 text-accf-green" />
+                  </div>
+                  <div className="font-serif font-bold text-2xl text-accf-green">
+                    {wallet ? formatNGN(wallet.availableBalance) : "₦0"}
+                  </div>
+                  <div className="text-[10px] text-accf-muted font-mono">
+                    Total Deposited: {wallet ? formatNGN(wallet.totalDeposits) : "₦0"}
+                  </div>
+                </div>
+
+                {/* Metric 2: Total Earnings */}
+                <div
+                  onClick={() => setActiveTab("wallet")}
+                  className="p-6 bg-white rounded-3xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs font-mono uppercase text-accf-muted">
+                    <span>Total Earnings</span>
+                    <TrendingUp className="w-4 h-4 text-accf-gold" />
+                  </div>
+                  <div className="font-serif font-bold text-2xl text-accf-gold">
+                    {wallet ? formatNGN(wallet.totalEarnings) : "₦0"}
+                  </div>
+                  <div className="text-[10px] text-emerald-600 font-mono">
+                    Commissions &amp; Payouts
+                  </div>
+                </div>
+
+                {/* Metric 3: Active CRM Leads */}
+                <div
+                  onClick={() => setActiveTab("crm")}
+                  className="p-6 bg-white rounded-3xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs font-mono uppercase text-accf-muted">
+                    <span>Active Leads</span>
+                    <Briefcase className="w-4 h-4 text-accf-maroon" />
+                  </div>
+                  <div className="font-serif font-bold text-2xl text-accf-charcoal">
+                    {leads.length} Leads
+                  </div>
+                  <div className="text-[10px] text-accf-muted font-mono">
+                    Pipeline: {formatNGN(totalPipelineValue)}
+                  </div>
+                </div>
+
+                {/* Metric 4: Team Network */}
+                <div
+                  onClick={() => setActiveTab("network")}
+                  className="p-6 bg-white rounded-3xl border border-accf-line-dark shadow-sm hover:border-accf-gold transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs font-mono uppercase text-accf-muted">
+                    <span>Trade Network</span>
+                    <Users className="w-4 h-4 text-accf-gold" />
+                  </div>
+                  <div className="font-serif font-bold text-2xl text-accf-charcoal">
+                    {network.length} Members
+                  </div>
+                  <div className="text-[10px] text-emerald-600 font-mono">
+                    {referralStats?.activeMembers || 0} Active delegates
                   </div>
                 </div>
               </div>
 
-              {/* Host Experience Listings */}
-              <div className="space-y-3 pt-4">
-                <h4 className="font-serif font-bold text-lg text-accf-charcoal">Your Active Dining Listings</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {hostListings.map((hl) => (
-                    <div key={hl.id} className="p-4 bg-white rounded-xl border border-accf-line-dark shadow-sm space-y-2">
-                      <div className="h-32 rounded-lg overflow-hidden">
-                        <img src={hl.images[0]} alt={hl.title} className="w-full h-full object-cover" />
+              {/* Performance Analytics Chart & Timeline */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif font-bold text-xl text-accf-charcoal">
+                      Financial &amp; Trade Performance
+                    </h3>
+                    <p className="text-xs text-accf-muted">
+                      Authoritative ledger activity aggregated over selected period.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 p-1 bg-accf-ivory rounded-xl border border-accf-line-dark self-start">
+                    {(["7D", "30D", "90D", "1Y"] as const).map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setTimeRange(r)}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+                          timeRange === r
+                            ? "bg-accf-green text-accf-gold shadow"
+                            : "text-accf-muted hover:text-accf-charcoal"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Visual Performance Bars */}
+                <div className="h-44 flex items-end gap-3 pt-6 pb-2 border-b border-accf-line-dark">
+                  {[
+                    { label: "Week 1", val: 40, amt: "₦80,000" },
+                    { label: "Week 2", val: 65, amt: "₦130,000" },
+                    { label: "Week 3", val: 45, amt: "₦90,000" },
+                    { label: "Week 4", val: 85, amt: "₦170,000" },
+                    { label: "Week 5", val: 100, amt: "₦200,000" },
+                  ].map((bar, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                      <div className="text-[9px] font-mono text-accf-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                        {bar.amt}
                       </div>
-                      <h5 className="font-serif font-bold text-sm text-accf-charcoal">{hl.title}</h5>
-                      <div className="flex justify-between text-xs font-mono text-accf-gold font-bold">
-                        <span>{formatNGN(hl.priceNGN)} / guest</span>
-                        <span className="text-accf-muted">{hl.date}</span>
-                      </div>
+                      <div
+                        style={{ height: `${bar.val}%` }}
+                        className="w-full bg-accf-green rounded-t-xl group-hover:bg-accf-gold transition-colors shadow-sm"
+                      />
+                      <span className="text-[10px] font-mono text-accf-muted">{bar.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* TAB: VENDOR PORTAL */}
-        {activeTab === "vendor_portal" && isVendor && (
-          <div className="space-y-8">
-            <div className="bg-white rounded-3xl p-8 border border-accf-line-dark shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-accf-line-dark pb-4">
-                <div>
-                  <h3 className="font-serif font-bold text-2xl text-accf-charcoal">Merchant Storefront &amp; Sales</h3>
-                  <p className="text-xs text-accf-muted">Fulfill customer orders, update product stock, and monitor payouts.</p>
-                </div>
-                <button
-                  onClick={() => alert("Simulated: Product Listing modal opened.")}
-                  className="px-4 py-2 rounded bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft flex items-center gap-1.5 shadow"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add New Product
-                </button>
-              </div>
-
-              {/* Financial KPIs */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-center">
-                <div className="p-4 bg-accf-ivory rounded-xl border border-accf-line-dark">
-                  <span className="text-xs text-accf-muted uppercase block">Gross Storefront Sales</span>
-                  <strong className="text-xl text-accf-green">₦1,240,000</strong>
-                </div>
-                <div className="p-4 bg-accf-ivory rounded-xl border border-accf-line-dark">
-                  <span className="text-xs text-accf-muted uppercase block">Pending Settlement</span>
-                  <strong className="text-xl text-accf-gold">₦348,000</strong>
-                </div>
-                <div className="p-4 bg-accf-ivory rounded-xl border border-accf-line-dark">
-                  <span className="text-xs text-accf-muted uppercase block">Active SKU Inventory</span>
-                  <strong className="text-xl text-accf-charcoal">6 Products</strong>
-                </div>
-              </div>
-
-              {/* Inbound Orders to fulfill */}
-              <div className="space-y-3 pt-4">
-                <h4 className="font-serif font-bold text-lg text-accf-charcoal">Orders Awaiting Fulfillment</h4>
-                <div className="p-4 bg-accf-ivory rounded-xl border border-accf-line-dark flex items-center justify-between gap-4 text-xs font-mono">
-                  <div>
-                    <div>Order Ref: <strong>#ORD-2026-9082</strong> &bull; Customer: Amina Okafor</div>
-                    <div className="text-accf-muted mt-0.5">2x Handcrafted Moroccan Tagine Pot &bull; Total: ₦44,000</div>
-                  </div>
+              {/* Recent Authoritative Ledger Transactions */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif font-bold text-xl text-accf-charcoal">
+                    Recent Ledger Activity
+                  </h3>
                   <button
-                    onClick={() => alert("Order marked as Packaged & Shipped. Tracking code generated.")}
-                    className="px-3.5 py-1.5 rounded bg-accf-gold text-accf-charcoal font-bold hover:bg-accf-gold-soft"
+                    onClick={() => setActiveTab("wallet")}
+                    className="text-xs text-accf-green font-bold hover:underline"
                   >
-                    Mark as Shipped
+                    View All Transactions &rarr;
                   </button>
                 </div>
+
+                {transactions.length === 0 ? (
+                  <div className="p-8 bg-accf-ivory rounded-2xl border border-accf-line-dark text-center space-y-2">
+                    <DollarSign className="w-8 h-8 text-accf-muted mx-auto" />
+                    <p className="text-xs text-accf-muted font-medium">
+                      You have no ledger transactions yet. Make a deposit or activate a plan to see records.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {transactions.slice(0, 4).map((tx) => (
+                      <div
+                        key={tx.id}
+                        className="p-4 bg-accf-ivory rounded-2xl border border-accf-line-dark flex items-center justify-between gap-4 text-xs"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold ${
+                              tx.type === "deposit" || tx.type === "earning"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {tx.type === "deposit" || tx.type === "earning" ? (
+                              <ArrowDownLeft className="w-4 h-4" />
+                            ) : (
+                              <ArrowUpRight className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-bold text-accf-charcoal">{tx.description}</div>
+                            <div className="text-[10px] font-mono text-accf-muted">
+                              Ref: {tx.reference} &bull; {tx.createdAt}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div
+                            className={`font-mono font-bold ${
+                              tx.type === "deposit" || tx.type === "earning"
+                                ? "text-emerald-700"
+                                : "text-accf-charcoal"
+                            }`}
+                          >
+                            {tx.type === "deposit" || tx.type === "earning" ? "+" : "-"}
+                            {formatNGN(tx.amount)}
+                          </div>
+                          <span className="text-[10px] font-mono text-emerald-600">● {tx.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* TAB: B2B TRADE DESK */}
-        {activeTab === "trade_desk" && isBusiness && (
-          <div className="space-y-8">
-            <div className="bg-white rounded-3xl p-8 border border-accf-line-dark shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-accf-line-dark pb-4">
-                <div>
-                  <h3 className="font-serif font-bold text-2xl text-accf-charcoal">Africa B2B Trade Desk</h3>
-                  <p className="text-xs text-accf-muted">Commercial matchmaking, intra-African food corridors, and agribusiness co-investments.</p>
+          {/* TAB 2: WALLET & FINANCIAL LEDGER */}
+          {activeTab === "wallet" && (
+            <div className="space-y-8">
+              {/* Wallet Balances Card */}
+              <div className="bg-gradient-to-r from-accf-charcoal to-accf-green-deep text-accf-ivory rounded-3xl p-8 border-2 border-accf-gold shadow-2xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-accf-line pb-4">
+                  <div>
+                    <span className="text-xs font-mono uppercase tracking-widest text-accf-gold font-bold">
+                      Authoritative Ledger Account
+                    </span>
+                    <h2 className="font-serif font-bold text-3xl text-accf-ivory">
+                      {wallet ? formatNGN(wallet.availableBalance) : "₦0"}
+                    </h2>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowDepositModal(true)}
+                      className="px-5 py-2.5 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft transition-all shadow"
+                    >
+                      + Deposit Funds
+                    </button>
+                    <button
+                      onClick={() => setShowWithdrawModal(true)}
+                      className="px-5 py-2.5 rounded-xl bg-accf-charcoal-card border border-accf-line text-accf-ivory font-bold text-xs uppercase tracking-wider hover:border-accf-gold transition-all"
+                    >
+                      Withdraw Funds
+                    </button>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
+                  <div>
+                    <span className="text-[10px] text-accf-ivory/50 block">Total Deposited</span>
+                    <strong className="text-accf-ivory text-sm">
+                      {wallet ? formatNGN(wallet.totalDeposits) : "₦0"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-accf-ivory/50 block">Total Earnings</span>
+                    <strong className="text-accf-gold text-sm">
+                      {wallet ? formatNGN(wallet.totalEarnings) : "₦0"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-accf-ivory/50 block">Total Payouts</span>
+                    <strong className="text-accf-ivory text-sm">
+                      {wallet ? formatNGN(wallet.totalWithdrawals) : "₦0"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-accf-ivory/50 block">Ledger State</span>
+                    <strong className="text-emerald-400 text-sm">● Synchronized</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Complete Ledger Records Table */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+                <div className="flex items-center justify-between border-b border-accf-line-dark pb-4">
+                  <h3 className="font-serif font-bold text-xl text-accf-charcoal">
+                    Immutable Transaction Ledger
+                  </h3>
+                  <span className="text-xs font-mono text-accf-muted">{transactions.length} Records</span>
+                </div>
+
+                {transactions.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-accf-muted space-y-2">
+                    <DollarSign className="w-10 h-10 text-accf-muted mx-auto" />
+                    <p>No transaction history recorded yet.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead>
+                        <tr className="border-b border-accf-line-dark text-[10px] text-accf-muted uppercase">
+                          <th className="pb-3">Timestamp</th>
+                          <th className="pb-3">Type</th>
+                          <th className="pb-3">Description</th>
+                          <th className="pb-3">Method</th>
+                          <th className="pb-3">Amount</th>
+                          <th className="pb-3">Balance After</th>
+                          <th className="pb-3 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-accf-line-dark/60">
+                        {transactions.map((tx) => (
+                          <tr key={tx.id} className="hover:bg-accf-ivory/60">
+                            <td className="py-3 text-accf-muted">{tx.createdAt}</td>
+                            <td className="py-3 font-bold uppercase text-accf-charcoal">{tx.type}</td>
+                            <td className="py-3 text-accf-charcoal font-medium">{tx.description}</td>
+                            <td className="py-3 text-accf-muted">{tx.paymentMethod || "Direct"}</td>
+                            <td
+                              className={`py-3 font-bold ${
+                                tx.type === "deposit" || tx.type === "earning"
+                                  ? "text-emerald-700"
+                                  : "text-accf-charcoal"
+                              }`}
+                            >
+                              {tx.type === "deposit" || tx.type === "earning" ? "+" : "-"}
+                              {formatNGN(tx.amount)}
+                            </td>
+                            <td className="py-3 text-accf-muted">{formatNGN(tx.balanceAfter)}</td>
+                            <td className="py-3 text-right text-emerald-600 font-bold">● {tx.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: BUSINESS LEADS (CRM) */}
+          {activeTab === "crm" && (
+            <div className="space-y-8">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-accf-line-dark pb-4">
+                  <div>
+                    <h3 className="font-serif font-bold text-2xl text-accf-charcoal">
+                      B2B Trade &amp; Agribusiness CRM
+                    </h3>
+                    <p className="text-xs text-accf-muted">
+                      Track cross-border commercial leads, buyer inquiries, and food trade partnerships.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddLeadModal(true)}
+                    className="px-5 py-2.5 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft transition-all shadow flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add New Lead</span>
+                  </button>
+                </div>
+
+                {leads.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-accf-muted space-y-3">
+                    <Briefcase className="w-12 h-12 text-accf-muted mx-auto" />
+                    <p className="font-medium">No business leads in your pipeline yet.</p>
+                    <button
+                      onClick={() => setShowAddLeadModal(true)}
+                      className="px-4 py-2 rounded-xl bg-accf-green text-accf-ivory font-bold text-xs hover:bg-accf-green-light"
+                    >
+                      Create Your First Lead &rarr;
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {leads.map((lead) => (
+                      <div
+                        key={lead.id}
+                        className="p-5 bg-accf-ivory rounded-2xl border border-accf-line-dark space-y-3"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accf-line-dark pb-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-serif font-bold text-base text-accf-charcoal">
+                              {lead.name}
+                            </h4>
+                            <span className="font-mono text-accf-muted">&bull; {lead.company} ({lead.country})</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono font-bold text-accf-green">{formatNGN(lead.value)}</span>
+                            <span className="px-2.5 py-0.5 rounded bg-accf-gold/20 text-accf-charcoal font-mono text-[10px] font-bold uppercase">
+                              {lead.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-accf-muted">
+                          <div>Email: <strong className="text-accf-charcoal">{lead.email || "N/A"}</strong></div>
+                          <div>Phone: <strong className="text-accf-charcoal">{lead.phone || "N/A"}</strong></div>
+                        </div>
+
+                        {lead.notes && (
+                          <p className="text-xs text-accf-charcoal/80 bg-white p-3 rounded-xl border border-accf-line-dark">
+                            &ldquo;{lead.notes}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: NETWORK & REFERRALS */}
+          {activeTab === "network" && (
+            <div className="space-y-8">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-accf-line-dark pb-4">
+                  <div>
+                    <h3 className="font-serif font-bold text-2xl text-accf-charcoal">
+                      Your African Trade Team &amp; Referrals
+                    </h3>
+                    <p className="text-xs text-accf-muted">
+                      Partners and delegates registered through your sovereign invitation code.
+                    </p>
+                  </div>
+                  <div className="font-mono text-xs text-accf-green font-bold px-3 py-1.5 bg-accf-ivory rounded-xl border border-accf-line-dark">
+                    Code: {referralStats?.referralCode}
+                  </div>
+                </div>
+
+                {network.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-accf-muted space-y-3">
+                    <Users className="w-12 h-12 text-accf-muted mx-auto" />
+                    <p className="font-medium">You haven&apos;t invited any team members yet.</p>
+                    <button
+                      onClick={handleCopyReferral}
+                      className="px-4 py-2 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider"
+                    >
+                      Copy Your Invite Link
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {network.map((member) => (
+                      <div
+                        key={member.id}
+                        className="p-5 bg-accf-ivory rounded-2xl border border-accf-line-dark space-y-2"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <h4 className="font-serif font-bold text-base text-accf-charcoal">
+                            {member.name}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold uppercase">
+                            {member.tier}
+                          </span>
+                        </div>
+                        <div className="text-xs text-accf-muted font-mono">{member.country} &bull; Joined {member.joinedAt}</div>
+                        <div className="pt-2 border-t border-accf-line-dark flex justify-between text-xs font-mono">
+                          <span>Commission Earned:</span>
+                          <strong className="text-accf-gold">{formatNGN(member.commissionEarned)}</strong>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: ORDERS */}
+          {activeTab === "orders" && (
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-accf-line-dark pb-4">
+                <h3 className="font-serif font-bold text-2xl text-accf-charcoal">Marketplace Orders</h3>
                 <Link
-                  href="/business"
-                  className="px-4 py-2 rounded bg-accf-green text-accf-ivory font-bold text-xs hover:bg-accf-green-light"
+                  href="/marketplace"
+                  className="px-4 py-2 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider"
                 >
-                  Browse All Continental Deals &rarr;
+                  Browse Marketplace &rarr;
                 </Link>
               </div>
 
-              <div className="p-5 bg-accf-ivory rounded-2xl border border-accf-line-dark space-y-3">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-accf-maroon font-bold uppercase">Active Deal Lead</span>
-                  <span className="text-emerald-700 font-bold">● High Match Quality (94%)</span>
+              {orders.length === 0 ? (
+                <div className="p-12 text-center text-xs text-accf-muted space-y-2">
+                  <ShoppingBag className="w-10 h-10 text-accf-muted mx-auto" />
+                  <p>You haven&apos;t placed any marketplace orders yet.</p>
                 </div>
-                <h4 className="font-serif font-bold text-lg text-accf-charcoal">
-                  Solar Cold-Chain Storage &amp; Fresh Produce Off-Take
-                </h4>
-                <p className="text-xs text-accf-charcoal/80 leading-relaxed">
-                  East African Agribusiness Consortium is seeking cold-storage distribution partners across Mombasa and Nairobi corridors.
-                </p>
-                <div className="pt-2 flex justify-between items-center text-xs">
-                  <span className="font-mono text-accf-green font-bold">Value: $500,000 USD Co-investment</span>
-                  <button
-                    onClick={() => alert("Matchmaking connection requested! Our investment officer will facilitate the introduction.")}
-                    className="px-4 py-2 rounded bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider"
-                  >
-                    Initiate Direct Trade Match
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: AMBASSADOR SUITE */}
-        {activeTab === "ambassador_suite" && isAmbassador && (
-          <div className="space-y-8">
-            <div className="bg-accf-charcoal text-accf-ivory rounded-3xl p-8 border-2 border-accf-gold shadow-2xl space-y-6">
-              <div className="flex items-center justify-between border-b border-accf-line pb-4">
-                <div>
-                  <span className="text-xs font-mono uppercase tracking-widest text-accf-gold font-bold">
-                    Diplomatic Mission Portfolio
-                  </span>
-                  <h3 className="font-serif font-bold text-2xl text-accf-ivory">Continental Ambassador Suite</h3>
-                </div>
-                <span className="px-3 py-1 rounded bg-accf-gold text-accf-charcoal text-xs font-mono font-bold uppercase">
-                  SOVEREIGN ACCREDITATION
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-                <div className="p-4 bg-accf-charcoal-card border border-accf-line/60 rounded-xl space-y-1">
-                  <span className="text-[10px] text-accf-ivory/50 block uppercase">2km Peace Table Seat</span>
-                  <strong className="text-accf-gold text-sm">Zone 1: Elders &amp; Diplomatic Pavilion</strong>
-                </div>
-                <div className="p-4 bg-accf-charcoal-card border border-accf-line/60 rounded-xl space-y-1">
-                  <span className="text-[10px] text-accf-ivory/50 block uppercase">National Leaves Endorsed</span>
-                  <strong className="text-emerald-400 text-sm">3,490 Signatures</strong>
-                </div>
-                <div className="p-4 bg-accf-charcoal-card border border-accf-line/60 rounded-xl space-y-1">
-                  <span className="text-[10px] text-accf-ivory/50 block uppercase">Delegation Quota</span>
-                  <strong className="text-accf-ivory text-sm">50 Accredited Delegates</strong>
-                </div>
-              </div>
-
-              <div className="p-5 bg-accf-green-deep border border-accf-gold/40 rounded-2xl space-y-2">
-                <h4 className="font-serif font-bold text-base text-accf-gold-soft">Ambassadorial Mandate</h4>
-                <p className="text-xs text-accf-ivory/85 leading-relaxed">
-                  As a Continental Ambassador, you hold the authority to lead national delegations, bless the breaking of the kolanut during the Abuja 2026 Opening Rite, and represent your nation at the Ministerial Food Security Dialogue.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: DIGITAL ID PASS */}
-        {activeTab === "idcard" && (
-          <div className="flex justify-center py-6">
-            <div className="w-full max-w-md bg-accf-charcoal text-accf-ivory rounded-3xl p-8 border-2 border-accf-gold shadow-2xl space-y-6 id-card-glow relative overflow-hidden">
-              <div className="flex items-center justify-between border-b border-accf-line pb-4">
-                <div className="flex items-center gap-2.5">
-                  <img
-                    src="/images/accf-logo.jpg"
-                    alt="African Cultural Culinary Festival Logo"
-                    className="w-9 h-9 rounded-full object-contain bg-white/95 p-0.5 border border-accf-gold shadow"
-                  />
-                  <div>
-                    <div className="font-serif font-bold text-sm text-accf-ivory">African Cultural Culinary Festival</div>
-                    <div className="text-[9px] font-mono tracking-widest text-accf-gold uppercase">
-                      Official Diplomatic Seat Pass
-                    </div>
-                  </div>
-                </div>
-                <div className="px-2 py-0.5 rounded bg-accf-gold text-accf-charcoal text-[9px] font-mono font-bold uppercase">
-                  VERIFIED
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <img
-                  src={user.photoUrl}
-                  alt={user.name}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-accf-gold shadow-md"
-                />
-                <div>
-                  <h3 className="font-serif font-bold text-xl text-accf-ivory">{user.name}</h3>
-                  <div className="text-xs font-semibold text-accf-gold-soft">{user.tier}</div>
-                  <div className="text-[11px] text-accf-ivory/60">{user.city ? `${user.city}, ` : ""}{user.country}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 p-3.5 bg-accf-charcoal-card border border-accf-line/60 rounded-xl text-xs font-mono">
-                <div>
-                  <span className="text-[10px] text-accf-ivory/50 block">Chair ID:</span>
-                  <strong className="text-accf-gold">{user.chairNo}</strong>
-                </div>
-                <div>
-                  <span className="text-[10px] text-accf-ivory/50 block">Member Since:</span>
-                  <strong className="text-accf-ivory">{user.joinDate}</strong>
-                </div>
-              </div>
-
-              <div className="p-3 bg-accf-green-deep border border-accf-line/60 rounded-lg text-xs italic text-accf-ivory/90">
-                &ldquo;{user.pledgeText}&rdquo;
-              </div>
-
-              <div className="pt-2 border-t border-accf-line/60 flex items-center justify-between text-[10px] text-accf-ivory/70">
-                <span>Committed to Peace, Unity &amp; Cultural Solidarity</span>
-                <div className="w-8 h-8 rounded border border-accf-gold/40 bg-accf-green flex items-center justify-center font-mono text-[9px] text-accf-gold">
-                  QR
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: MEET & EAT */}
-        {activeTab === "meeteat" && (
-          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-accf-line-dark pb-4">
-              <div>
-                <h3 className="font-serif font-bold text-xl text-accf-charcoal">Your Cultural Dining Bookings</h3>
-                <p className="text-xs text-accf-muted mt-0.5">
-                  Shared home meals across Nigeria, Ghana, Kenya, Ethiopia, and 50 other nations.
-                </p>
-              </div>
-              <Link
-                href="/meet-and-eat"
-                className="px-4 py-2 rounded bg-accf-green text-accf-ivory text-xs font-semibold hover:bg-accf-green-light"
-              >
-                Browse More Hosts &rarr;
-              </Link>
-            </div>
-
-            {bookings.length === 0 ? (
-              <div className="text-center py-12 space-y-3">
-                <UtensilsCrossed className="w-12 h-12 text-accf-muted mx-auto" />
-                <p className="text-xs text-accf-muted">You haven&apos;t booked a cultural meal yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {bookings.map((b) => (
-                  <div
-                    key={b.id}
-                    className="p-4 bg-accf-ivory rounded-xl border border-accf-line-dark flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                  >
-                    <div>
-                      <h4 className="font-serif font-bold text-base text-accf-charcoal">{b.listingTitle}</h4>
-                      <div className="text-xs text-accf-muted font-mono mt-1">
-                        Host: <strong>{b.hostName}</strong> &bull; {b.partySize} Guests &bull; {b.date}
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((ord) => (
+                    <div key={ord.id} className="p-5 bg-accf-ivory rounded-2xl border border-accf-line-dark space-y-2 text-xs font-mono">
+                      <div className="flex justify-between border-b border-accf-line-dark pb-2">
+                        <span>Order #{ord.id} &bull; {ord.createdAt}</span>
+                        <span className="font-bold text-accf-green">{ord.status}</span>
+                      </div>
+                      <div className="space-y-1">
+                        {ord.items.map((it, i) => (
+                          <div key={i} className="flex justify-between">
+                            <span>{it.quantity}x {it.title}</span>
+                            <span>{formatNGN(it.price * it.quantity)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-2 border-t border-accf-line-dark flex justify-between font-bold">
+                        <span>Total:</span>
+                        <span className="text-accf-gold">{formatNGN(ord.totalAmountNGN)}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 text-xs font-mono font-bold">
-                        ● {b.status}
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 6: DINING */}
+          {activeTab === "dining" && (
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-accf-line-dark pb-4">
+                <h3 className="font-serif font-bold text-2xl text-accf-charcoal">Meet &amp; Eat Bookings</h3>
+                <Link
+                  href="/meet-and-eat"
+                  className="px-4 py-2 rounded-xl bg-accf-green text-accf-ivory font-bold text-xs"
+                >
+                  Find Cultural Hosts &rarr;
+                </Link>
+              </div>
+
+              {bookings.length === 0 ? (
+                <div className="p-12 text-center text-xs text-accf-muted space-y-2">
+                  <UtensilsCrossed className="w-10 h-10 text-accf-muted mx-auto" />
+                  <p>You have no dining bookings yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {bookings.map((b) => (
+                    <div key={b.id} className="p-4 bg-accf-ivory rounded-2xl border border-accf-line-dark flex justify-between items-center text-xs">
+                      <div>
+                        <h4 className="font-serif font-bold text-sm text-accf-charcoal">{b.listingTitle}</h4>
+                        <div className="text-accf-muted font-mono">{b.date} &bull; {b.partySize} Guests</div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-bold">
+                        {b.status}
                       </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB: ORDERS */}
-        {activeTab === "orders" && (
-          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-accf-line-dark pb-4">
-              <div>
-                <h3 className="font-serif font-bold text-xl text-accf-charcoal">Marketplace Order History</h3>
-                <p className="text-xs text-accf-muted mt-0.5">
-                  Track authentic ingredients, spices, and cookware ordered from African vendors.
-                </p>
-              </div>
-              <Link
-                href="/marketplace"
-                className="px-4 py-2 rounded bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider hover:bg-accf-gold-soft"
-              >
-                Shop Marketplace &rarr;
-              </Link>
+                  ))}
+                </div>
+              )}
             </div>
+          )}
 
-            {orders.length === 0 ? (
-              <div className="text-center py-12 space-y-3">
-                <ShoppingBag className="w-12 h-12 text-accf-muted mx-auto" />
-                <p className="text-xs text-accf-muted">No marketplace orders recorded yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {orders.map((ord) => (
-                  <div
-                    key={ord.id}
-                    className="p-5 bg-accf-ivory rounded-xl border border-accf-line-dark space-y-3"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono border-b border-accf-line-dark pb-2">
-                      <div>
-                        Order Ref: <strong className="text-accf-green">{ord.id}</strong> &bull; {ord.createdAt}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-accf-muted">Tracking: {ord.trackingNumber}</span>
-                        <span className="px-2 py-0.5 rounded bg-accf-green text-accf-gold font-bold">
-                          {ord.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      {ord.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-xs">
-                          <span className="text-accf-charcoal font-medium">
-                            {item.quantity}x {item.title}
-                          </span>
-                          <span className="font-mono text-accf-muted">{formatNGN(item.price * item.quantity)}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="pt-2 border-t border-accf-line-dark flex justify-between items-center text-xs font-bold">
-                      <span>Total Paid:</span>
-                      <span className="font-mono text-accf-gold text-sm">{formatNGN(ord.totalAmountNGN)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB: TREE LEAF */}
-        {activeTab === "tree" && (
-          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
-            <h3 className="font-serif font-bold text-xl text-accf-charcoal">Your Leaf on the Kolanut Tree</h3>
-            <div className="p-6 bg-accf-charcoal text-accf-ivory rounded-2xl border border-accf-gold space-y-4 max-w-lg">
-              <div className="flex items-center gap-3">
-                <img
-                  src={user.photoUrl}
-                  alt={user.name}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-accf-gold shadow"
-                />
+          {/* TAB 7: SETTINGS */}
+          {activeTab === "settings" && (
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-accf-line-dark shadow-sm space-y-6">
+              <h3 className="font-serif font-bold text-2xl text-accf-charcoal">Profile &amp; Account Settings</h3>
+              <div className="space-y-3 text-xs">
                 <div>
-                  <h4 className="font-serif font-bold text-lg">{user.name}</h4>
-                  <div className="text-xs font-mono text-accf-gold">{user.chairNo}</div>
-                  <div className="text-[11px] text-accf-ivory/60">{user.country}</div>
+                  <label className="block text-accf-muted mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={user.name}
+                    className="w-full px-3.5 py-2.5 bg-accf-ivory border border-accf-line-dark rounded-xl text-accf-charcoal font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-accf-muted mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    readOnly
+                    value={user.email}
+                    className="w-full px-3.5 py-2.5 bg-accf-ivory border border-accf-line-dark rounded-xl text-accf-charcoal font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-accf-muted mb-1">Country &amp; Chair Sequence</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${user.country} (${user.chairNo})`}
+                    className="w-full px-3.5 py-2.5 bg-accf-ivory border border-accf-line-dark rounded-xl text-accf-gold font-mono font-bold"
+                  />
                 </div>
               </div>
-              <blockquote className="font-serif italic text-base text-accf-ivory/90 border-l-2 border-accf-gold pl-3">
-                &ldquo;{user.pledgeText}&rdquo;
-              </blockquote>
-              <div className="pt-2 flex justify-end">
-                <Link
-                  href="/kolanut-tree"
-                  className="text-xs text-accf-gold hover:underline font-semibold"
-                >
-                  Locate on Tree of Peace &rarr;
-                </Link>
-              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* DEPOSIT MODAL */}
+      {showDepositModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-accf-charcoal text-accf-ivory border-2 border-accf-gold rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl">
+            <h3 className="font-serif font-bold text-2xl text-accf-ivory">Deposit to ACCF Wallet</h3>
+            <form onSubmit={handleExecuteDeposit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-accf-ivory/70 mb-1">Deposit Amount (NGN)</label>
+                <input
+                  type="number"
+                  required
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
+                  className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-gold font-mono text-base font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-accf-ivory/70 mb-1">Payment Channel</label>
+                <select
+                  value={depositMethod}
+                  onChange={(e) => setDepositMethod(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                >
+                  <option value="Paystack">Paystack (Debit/Credit Card/Direct Bank)</option>
+                  <option value="Flutterwave">Flutterwave (Pan-African Mobile Money)</option>
+                  <option value="Direct Wire">Direct Central Bank Wire</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-accf-line">
+                <button
+                  type="button"
+                  onClick={() => setShowDepositModal(false)}
+                  className="px-4 py-2 text-xs text-accf-ivory/60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider"
+                >
+                  Confirm Deposit &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* WITHDRAW MODAL */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-accf-charcoal text-accf-ivory border-2 border-accf-gold rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl">
+            <h3 className="font-serif font-bold text-2xl text-accf-ivory">Withdraw Funds to Bank</h3>
+            <form onSubmit={handleExecuteWithdraw} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-accf-ivory/70 mb-1">Withdrawal Amount (NGN)</label>
+                <input
+                  type="number"
+                  required
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(parseFloat(e.target.value))}
+                  className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-gold font-mono text-base font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-accf-ivory/70 mb-1">Destination Bank Account</label>
+                <input
+                  type="text"
+                  required
+                  value={withdrawBank}
+                  onChange={(e) => setWithdrawBank(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-accf-line">
+                <button
+                  type="button"
+                  onClick={() => setShowWithdrawModal(false)}
+                  className="px-4 py-2 text-xs text-accf-ivory/60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider"
+                >
+                  Process Withdrawal &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD LEAD MODAL */}
+      {showAddLeadModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-accf-charcoal text-accf-ivory border-2 border-accf-gold rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl">
+            <h3 className="font-serif font-bold text-2xl text-accf-ivory">Add Business Lead to CRM</h3>
+            <form onSubmit={handleCreateLead} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-accf-ivory/70 mb-1">Contact Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newLeadName}
+                    onChange={(e) => setNewLeadName(e.target.value)}
+                    placeholder="e.g. Ousmane Diop"
+                    className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                  />
+                </div>
+                <div>
+                  <label className="block text-accf-ivory/70 mb-1">Company / Organization</label>
+                  <input
+                    type="text"
+                    required
+                    value={newLeadCompany}
+                    onChange={(e) => setNewLeadCompany(e.target.value)}
+                    placeholder="e.g. Dakar Agrotech"
+                    className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-accf-ivory/70 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newLeadEmail}
+                    onChange={(e) => setNewLeadEmail(e.target.value)}
+                    placeholder="contact@company.africa"
+                    className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                  />
+                </div>
+                <div>
+                  <label className="block text-accf-ivory/70 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={newLeadPhone}
+                    onChange={(e) => setNewLeadPhone(e.target.value)}
+                    placeholder="+221 77 000 0000"
+                    className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-accf-ivory/70 mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={newLeadCountry}
+                    onChange={(e) => setNewLeadCountry(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                  />
+                </div>
+                <div>
+                  <label className="block text-accf-ivory/70 mb-1">Estimated Deal Value (NGN)</label>
+                  <input
+                    type="number"
+                    value={newLeadValue}
+                    onChange={(e) => setNewLeadValue(parseFloat(e.target.value))}
+                    className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-gold font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-accf-ivory/70 mb-1">Opportunity Notes</label>
+                <textarea
+                  rows={2}
+                  value={newLeadNotes}
+                  onChange={(e) => setNewLeadNotes(e.target.value)}
+                  placeholder="Key details about trade requirements..."
+                  className="w-full px-3.5 py-2.5 bg-accf-charcoal-card border border-accf-line rounded-xl text-accf-ivory"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-accf-line">
+                <button
+                  type="button"
+                  onClick={() => setShowAddLeadModal(false)}
+                  className="px-4 py-2 text-xs text-accf-ivory/60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-accf-gold text-accf-charcoal font-bold text-xs uppercase tracking-wider"
+                >
+                  Save Lead &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

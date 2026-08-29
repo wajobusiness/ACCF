@@ -26,7 +26,7 @@ export default function PeaceTablePage() {
   // Accreditation Form
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [category, setCategory] = useState<AccreditationRequest["category"]>("Diplomatic Community");
+  const [category, setCategory] = useState<AccreditationRequest["category"]>("African Union & Diplomatic Corps");
   const [organization, setOrganization] = useState("");
   const [title, setTitle] = useState("");
   const [country, setCountry] = useState("Nigeria");

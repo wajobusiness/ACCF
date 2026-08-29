@@ -187,7 +187,7 @@ export default function CommunityHubsPage() {
               {/* Tags & Action Bar */}
               <div className="pt-4 border-t border-accf-line-dark flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-wrap gap-1.5">
-                  {post.tags.map((t, i) => (
+                  {post.tags?.map((t, i) => (
                     <span
                       key={i}
                       className="px-2 py-0.5 rounded bg-accf-ivory text-[10px] font-mono text-accf-muted border border-accf-line-dark"

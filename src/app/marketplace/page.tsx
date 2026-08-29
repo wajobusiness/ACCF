@@ -215,7 +215,7 @@ export default function MarketplacePage() {
                 {selectedProduct.description}
               </p>
               <div className="pt-2 text-xs font-mono text-accf-gold-soft">
-                Origin: {selectedProduct.originRegion}
+                Origin: {selectedProduct.originCountry}
               </div>
             </div>
 
