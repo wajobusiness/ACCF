@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   X,
   MessageSquare,
+  Send,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -26,6 +27,13 @@ export default function MeetAndEatPage() {
   const [partySize, setPartySize] = useState(2);
   const [dietaryNotes, setDietaryNotes] = useState("");
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+
+  // Chat Simulation State
+  const [chattingWithHost, setChattingWithHost] = useState<MeetEatListing | null>(null);
+  const [chatMessages, setChatMessages] = useState<{ sender: "user" | "host"; text: string; time: string }[]>([
+    { sender: "host", text: "Hello! Welcome to our dining circle. Looking forward to hosting you for authentic home-cooked hospitality!", time: "10:30 AM" }
+  ]);
+  const [inputMsg, setInputMsg] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -59,6 +67,30 @@ export default function MeetAndEatPage() {
       spread: 70,
       origin: { y: 0.6 },
     });
+  };
+
+  const handleSendChat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputMsg.trim()) return;
+
+    const userText = inputMsg;
+    setChatMessages((prev) => [
+      ...prev,
+      { sender: "user", text: userText, time: "Just now" }
+    ]);
+    setInputMsg("");
+
+    // Simulated host reply after 1s
+    setTimeout(() => {
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          sender: "host",
+          text: `Thank you for your message! Yes, we can certainly accommodate your preferences and prepare fresh hibiscus tea as a welcome blessing.`,
+          time: "Just now"
+        }
+      ]);
+    }, 1000);
   };
 
   return (
@@ -161,11 +193,21 @@ export default function MeetAndEatPage() {
                 </div>
               </div>
 
-              <div className="p-6 pt-0">
+              <div className="p-6 pt-0 space-y-3">
                 <div className="pt-4 border-t border-accf-line-dark flex items-center justify-between text-xs font-bold text-accf-green group-hover:text-accf-gold">
                   <span>View Experience &amp; Book</span>
-                  <span>→</span>
+                  <span>&rarr;</span>
                 </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChattingWithHost(item);
+                  }}
+                  className="w-full py-2 rounded bg-accf-ivory border border-accf-line-dark text-accf-charcoal text-xs font-semibold hover:border-accf-gold flex items-center justify-center gap-1.5"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-accf-green" />
+                  Chat with Host {item.hostName.split(" ")[0]}
+                </button>
               </div>
             </div>
           ))}
@@ -186,7 +228,7 @@ export default function MeetAndEatPage() {
                 <div>
                   <h3 className="font-serif font-bold text-lg">{selectedListing.title}</h3>
                   <div className="text-xs font-mono text-accf-gold-soft">
-                    Hosted by {selectedListing.hostName} • {selectedListing.city}
+                    Hosted by {selectedListing.hostName} &bull; {selectedListing.city}
                   </div>
                 </div>
               </div>
@@ -225,7 +267,7 @@ export default function MeetAndEatPage() {
                   Cultural Dining Confirmed!
                 </h4>
                 <p className="text-xs text-accf-ivory/80 max-w-sm mx-auto leading-relaxed">
-                  Host <strong>{selectedListing.hostName}</strong> has accepted your booking for {partySize} guests in {selectedListing.city}. Check your dashboard for in-app chat and meeting directions.
+                  Host <strong>{selectedListing.hostName}</strong> has accepted your booking for {partySize} guests in {selectedListing.city}. Check your dashboard for directions and in-app chat.
                 </p>
                 <button
                   onClick={() => setSelectedListing(null)}
@@ -293,7 +335,71 @@ export default function MeetAndEatPage() {
           </div>
         </div>
       )}
+
+      {/* HOST CHAT SIMULATION MODAL */}
+      {chattingWithHost && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-accf-charcoal text-accf-ivory border-2 border-accf-gold rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl flex flex-col h-[500px]">
+            <div className="flex items-center justify-between border-b border-accf-line pb-3">
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={chattingWithHost.hostPhoto}
+                  alt={chattingWithHost.hostName}
+                  className="w-8 h-8 rounded-full object-cover border border-accf-gold"
+                />
+                <div>
+                  <h4 className="font-serif font-bold text-sm text-accf-ivory">{chattingWithHost.hostName}</h4>
+                  <span className="text-[10px] font-mono text-emerald-400">● Online &bull; {chattingWithHost.city}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setChattingWithHost(null)}
+                className="p-1 rounded text-accf-ivory/60 hover:text-accf-ivory"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Messages Stream */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+              {chatMessages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-2xl ${
+                      msg.sender === "user"
+                        ? "bg-accf-gold text-accf-charcoal font-medium rounded-tr-none"
+                        : "bg-accf-green-deep text-accf-ivory border border-accf-line/60 rounded-tl-none"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                  <span className="text-[9px] text-accf-ivory/50 mt-1 font-mono">{msg.time}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Chat Input */}
+            <form onSubmit={handleSendChat} className="flex gap-2 pt-2 border-t border-accf-line">
+              <input
+                type="text"
+                value={inputMsg}
+                onChange={(e) => setInputMsg(e.target.value)}
+                placeholder="Ask host about menu, arrival, ingredients..."
+                className="flex-1 px-3 py-2 bg-accf-charcoal-card border border-accf-line rounded text-accf-ivory text-xs focus:border-accf-gold"
+              />
+              <button
+                type="submit"
+                className="p-2.5 rounded bg-accf-gold text-accf-charcoal hover:bg-accf-gold-soft transition-colors"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
